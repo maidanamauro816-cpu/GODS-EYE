@@ -62,9 +62,10 @@ export class CameraLayer {
     modal.hidden=false;
     document.getElementById("camera-title").textContent=camera.name;
     document.getElementById("camera-meta").textContent=[camera.country,camera.provider].filter(Boolean).join(" · ");
-    const image=document.getElementById("camera-image"),video=document.getElementById("camera-video"),message=document.getElementById("camera-message"),link=document.getElementById("camera-source");
+    const image=document.getElementById("camera-image"),video=document.getElementById("camera-video"),message=document.getElementById("camera-message"),link=document.getElementById("camera-source"),credit=document.getElementById("camera-attribution");
     image.hidden=true;video.hidden=true;video.removeAttribute("src");message.textContent="Consultando disponibilidad de la cámara…";
     link.href=safeUrl(camera.source);link.hidden=!camera.source;
+    if(credit){credit.hidden=true;credit.textContent="";credit.removeAttribute("href");}
     image.onerror=()=>{image.onerror=null;image.src="https://api.openeye.cam/v1/offline.webp";};
     if(camera.provider!=="OpenEye · catálogo público"){
       if(camera.image){image.src=safeUrl(camera.image);image.hidden=false;message.textContent="Imagen pública del proveedor · instantánea, no vídeo continuo";}
@@ -77,52 +78,29 @@ export class CameraLayer {
       const payload=await response.json(),detail=payload.item||payload.camera||payload;
       const view=detail.view||{};
       const attribution=detail.redistribution?.attribution;
-      if(attribution?.name)document.getElementById("camera-meta").textContent+=" · Imagen: "+attribution.name;
-      if(detail.live===false)message.textContent="Sin imagen reciente confirmada. Abrí el visor oficial para comprobar el estado.";
-      if(view.render==="image"&&view.url){
-        image.src=view.url;image.hidden=false;
-        const age=Number.isFinite(+detail.last_frame_age_s)?Math.round(+detail.last_frame_age_s):null;
-        message.textContent=age===null?"Imagen pública disponible":(age<120?"Imagen recibida hace "+age+" s":"Última imagen hace "+Math.round(age/60)+" min");
-      }else if(detail.preview_url){
-        image.src=detail.preview_url;image.hidden=false;
-        message.textContent=detail.live===true?"Última imagen pública disponible":"Vista previa; directo no confirmado";
-      }else if(view.render==="link"&&view.url){
-        link.href=safeUrl(view.url);message.textContent="Esta cámara se visualiza en el sitio oficial; no permite insertar el vídeo en la aplicación.";
-      }else message.textContent="El proveedor no ofrece una vista insertable. Usá el visor oficial.";
+      const mayEmbed=detail.redistribution?.preview_embed===true;
+      const attributionValid=!attribution?.required||(!!attribution?.name&&!!attribution?.url);
+      if(attribution?.required&&attributionValid&&credit){credit.href=safeUrl(attribution.url);credit.textContent=attribution.name;credit.hidden=false;}
       const liveVideo=detail.feed_kind==="live_video"||detail.kind==="live_video";
-      if(liveVideo){
-        message.textContent="Intentando establecer vídeo en directo…";
-        try{
-          await this.playWhep(camera.id,video);
-          video.hidden=false;image.hidden=true;message.textContent="VÍDEO EN DIRECTO · conexión WebRTC";
-        }catch(error){message.textContent="No se pudo insertar el vídeo ("+error.message+"). Abrí el visor oficial.";link.href=safeUrl(detail.source_url||detail.page_url||camera.source);}
-      }
-      if(attribution?.url)link.href=safeUrl(attribution.url);
+      const officialUrl=detail.page_url||detail.source_url||(view.render==="link"?view.url:null)||camera.source;
+      if(officialUrl)link.href=safeUrl(officialUrl);
+      if(detail.live===false)message.textContent="Sin imagen reciente confirmada. Abrí el visor oficial para comprobar el estado.";
+      else if(view.render==="image"&&view.url&&mayEmbed&&attributionValid){
+        image.src=safeUrl(view.url);image.hidden=false;
+        const age=Number.isFinite(+detail.last_frame_age_s)?Math.round(+detail.last_frame_age_s):null;
+        message.textContent=age===null?"Instantánea pública autorizada":(age<120?"Imagen recibida hace "+age+" s":"Última imagen hace "+Math.round(age/60)+" min");
+      }else if(liveVideo){
+        message.textContent="Esta cámara dispone de vídeo en directo. Abrí el visor oficial para verlo. No iniciamos WHEP desde aquí porque el servicio puede cobrar por segundo.";
+      }else if(view.render==="link"&&view.url){
+        message.textContent="El proveedor permite ver esta cámara en su página oficial, pero no insertar su contenido aquí.";
+      }else if(view.render==="none"||!mayEmbed||!attributionValid){
+        message.textContent="La licencia de esta cámara no permite insertar la imagen. Abrí únicamente la fuente oficial.";
+      }else message.textContent="El proveedor no ofrece una vista insertable. Usá el visor oficial.";
     }catch(error){
       message.textContent="No se pudo consultar el detalle: "+error.message+". Podés probar el visor oficial.";
     }
   }
-  async playWhep(id,video){
-    this.stopVideo();
-    const pc=new RTCPeerConnection({iceServers:[{urls:"stun:stun.l.google.com:19302"}]});
-    this.peer=pc;
-    pc.addTransceiver("video",{direction:"recvonly"});
-    pc.addTransceiver("audio",{direction:"recvonly"});
-    pc.ontrack=event=>{video.srcObject=event.streams[0];video.play().catch(()=>{});};
-    const offer=await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    if(pc.iceGatheringState!=="complete")await new Promise(resolve=>{
-      const timeout=setTimeout(resolve,5000);
-      pc.addEventListener("icegatheringstatechange",()=>{if(pc.iceGatheringState==="complete"){clearTimeout(timeout);resolve();}});
-    });
-    const response=await fetch("https://api.openeye.cam/v1/streams/"+encodeURIComponent(id)+"/whep/offer",{
-      method:"POST",headers:{"Content-Type":"application/sdp","Accept":"application/sdp"},body:pc.localDescription.sdp
-    });
-    if(!response.ok)throw new Error("WHEP HTTP "+response.status);
-    await pc.setRemoteDescription({type:"answer",sdp:await response.text()});
-  }
   stopVideo(){
-    if(this.peer){this.peer.close();this.peer=null;}
     const video=document.getElementById("camera-video");
     if(video){video.pause();video.srcObject=null;}
   }
