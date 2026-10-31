@@ -1,6 +1,9 @@
 name: Integrate God's Eye View upstream
 
 on:
+  push:
+    branches: [feature/gods-eye-view-integration]
+    paths: ['.github/workflows/integrate-upstream.yml']
   workflow_dispatch:
   schedule:
     - cron: '17 5 * * 1'
