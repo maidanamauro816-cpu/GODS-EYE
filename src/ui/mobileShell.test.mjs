@@ -675,7 +675,7 @@ test('multitouch, cancellation, sheet changes and desktop transitions abandon th
     if (cancel === 'multitouch')
       touchEvent(document, 'touchstart', document.body, { count: 2 });
     if (cancel === 'cancel') touchEvent(document, 'touchcancel', panel);
-    if (cancel === 'sheet') press('more');
+    if (cancel === 'sheet') press('context');
     if (cancel === 'desktop') {
       resize(false);
       resize(true);
@@ -688,7 +688,7 @@ test('multitouch, cancellation, sheet changes and desktop transitions abandon th
       false,
     );
     touchEvent(document, 'touchend', panel, { y: 120 });
-    assert.equal(shell.getSheet(), cancel === 'sheet' ? 'more' : 'layers');
+    assert.equal(shell.getSheet(), cancel === 'sheet' ? 'context' : 'layers');
     shell.destroy();
   }
 });
@@ -720,15 +720,15 @@ test('the tab-open callback reports only a successful manual opening', () => {
   const phone = fixture({ onTabOpened: (sheet) => opened.push(sheet) });
   phone.shell.setSheet('more');
   assert.deepEqual(opened, []);
-  phone.press('more');
+  phone.press('context');
   assert.deepEqual(opened, [], 'closing is not a new context request');
-  phone.press('more');
-  assert.deepEqual(opened, ['more']);
+  phone.press('context');
+  assert.deepEqual(opened, ['context']);
   phone.setBodyClass('cockpit-mode');
-  phone.press('more');
+  phone.press('context');
   assert.deepEqual(
     opened,
-    ['more'],
+    ['context'],
     'blocked sheets cannot activate a mode',
   );
   phone.shell.destroy();
@@ -783,7 +783,7 @@ test('manual Context opens the existing transaction without disabling the tracke
   };
   try {
     assert.equal(
-      await StyleManager.prototype._onMobileTabOpened.call(shell, 'more'),
+      await StyleManager.prototype._onMobileTabOpened.call(shell, 'context'),
       true,
     );
     assert.equal(controls.getContextModeState().mode, 'flights');
@@ -801,7 +801,7 @@ test('manual Context opens the existing transaction without disabling the tracke
     assert.ok(!calls.some((call) => call.id === 'flights'));
     const count = calls.length;
     assert.equal(
-      await StyleManager.prototype._onMobileTabOpened.call(shell, 'more'),
+      await StyleManager.prototype._onMobileTabOpened.call(shell, 'context'),
       false,
     );
     assert.equal(
@@ -836,7 +836,7 @@ test('manual Context respects Space Missions, busy transitions, missing tracks a
     assert.equal(
       await StyleManager.prototype._onMobileTabOpened.call(
         shell,
-        state.sheet || 'more',
+        state.sheet || 'context',
       ),
       false,
     );
@@ -857,7 +857,7 @@ test('failed mobile Contacts entry uses the existing notice and cancelled/dispos
       _showToast: (message) => notices.push(message),
     };
     assert.equal(
-      await StyleManager.prototype._onMobileTabOpened.call(shell, 'more'),
+      await StyleManager.prototype._onMobileTabOpened.call(shell, 'context'),
       false,
     );
     assert.equal(
