@@ -1,4 +1,12 @@
 import { twoline2satrec, propagate, gstime, eciToGeodetic, degreesLat, degreesLong } from 'satellite.js';
+import { CameraLayer } from './layers/CameraLayer.js';
+import { SatelliteLayer } from './layers/SatelliteLayer.js';
+import { FlightLayer } from './layers/FlightLayer.js';
+import { ShipLayer } from './layers/ShipLayer.js';
+import { EarthquakeLayer } from './layers/EarthquakeLayer.js';
+import { WeatherLayer } from './layers/WeatherLayer.js';
+import { FireLayer } from './layers/FireLayer.js';
+import { DisasterWatcher } from './services/DisasterWatcher.js';
 
 const $ = (id) => document.getElementById(id);
 const hint = $('hint');
@@ -10,26 +18,33 @@ if (!window.Cesium) {
 }
 
 const viewer = new Cesium.Viewer('globe', {
-  animation: false,
-  timeline: false,
-  geocoder: false,
-  homeButton: false,
-  sceneModePicker: false,
-  baseLayerPicker: false,
-  navigationHelpButton: false,
-  fullscreenButton: false,
-  infoBox: true,
-  selectionIndicator: true,
-  shouldAnimate: true,
-  imageryProvider: false,
+  animation: false, timeline: false, geocoder: false, homeButton: false,
+  sceneModePicker: false, baseLayerPicker: false, navigationHelpButton: false,
+  fullscreenButton: false, infoBox: true, selectionIndicator: true,
+  shouldAnimate: true, imageryProvider: false,
   terrainProvider: new Cesium.EllipsoidTerrainProvider()
 });
+const disasterWatcher = new DisasterWatcher({
+  onAlert: (alert) => {
+    hint.textContent = alert.title + ' · ' + alert.body;
+    hint.classList.add('alert-pulse');
+    window.setTimeout(() => hint.classList.remove('alert-pulse'), 5000);
+  },
+  onStatus: (state) => {
+    const el = $('disaster-status');
+    if (el) el.textContent = state.active ? 'VIGILANCIA ACTIVA · ' + (state.checkedAt ? new Date(state.checkedAt).toLocaleTimeString() : 'iniciando') : 'INACTIVA';
+  },
+  onNavigate: ({ lat, lon }) => viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(lon, lat, 500000),
+    duration: 2
+  })
+});
+disasterWatcher.start().catch(error => console.warn('Disaster watcher:', error));
 
 viewer.imageryLayers.removeAll();
 viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
   url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  credit: '© OpenStreetMap contributors',
-  maximumLevel: 19
+  credit: '© OpenStreetMap contributors', maximumLevel: 19
 }));
 viewer.scene.globe.enableLighting = true;
 viewer.scene.globe.showGroundAtmosphere = true;
@@ -49,10 +64,54 @@ const haarp = viewer.entities.add({
   description: 'Instalación terrestre de investigación de la ionosfera en Gakona, Alaska. No es un satélite.'
 });
 
+let flightsVisible = false;
+let shipsVisible = false;
+let earthquakesVisible = false;
+let weatherVisible = false;
+let firesVisible = false;
+const flightLayer = new FlightLayer(viewer, state => {
+  const el = $('flights-status');
+  if (el) el.textContent = state.loading ? 'Consultando ADS-B…' : state.error ? state.error : state.count + ' aeronaves · ' + (state.coverage || 'ADS-B') + (state.worldStale ? ' · datos globales atrasados' : '');
+});
+const shipLayer = new ShipLayer(viewer, state => {
+  const el = $('ships-status');
+  if (el) el.textContent = state.loading ? 'Conectando AIS…' : state.error ? state.error : state.count + ' buques · ' + (state.coverage || 'AIS');
+});
+const earthquakeLayer = new EarthquakeLayer(viewer, state => {
+  const el = $('earthquakes-status');
+  if (el) el.textContent = state.loading ? 'Consultando USGS…' : state.error ? state.error : state.count + ' sismos · últimas 24 h';
+});
+const weatherLayer = new WeatherLayer(viewer, state => {
+  const el = $('weather-status');
+  if (el) el.textContent = state.loading ? 'Consultando Open-Meteo…' : state.error ? state.error : state.temperature + ' °C · ' + (state.summary || 'clima actual');
+});
+const fireLayer = new FireLayer(viewer, state => {
+  const el = $('fires-status');
+  if (el) el.textContent = state.loading ? 'Consultando NASA FIRMS…' : state.error ? state.error : state.count + ' detecciones VIIRS · 24 h';
+});
 let issEntity = null;
+let starlinkVisible = false;
+const starlinkLayer = new SatelliteLayer(viewer, (state) => {
+  const el = $('starlink-status');
+  if (el) el.textContent = state.loading ? 'Descargando TLE de CelesTrak…' : state.error ? state.error : state.count + ' objetos orbitales · CelesTrak';
+});
 let issVisible = true;
 let haarpVisible = true;
 let lastTle = null;
+let camerasVisible = false;
+const cameraLayer = new CameraLayer(viewer, (state) => {
+  const cameraStatus = $('camera-status');
+  if (!cameraStatus) return;
+  if (state.loading) cameraStatus.textContent = 'Consultando fuentes públicas…';
+  else if (state.error) cameraStatus.textContent = 'Error: ' + state.error;
+  else {
+    const active = state.sources.filter((s) => s.status === 'online');
+    const failed = state.sources.filter((s) => s.status !== 'online');
+    cameraStatus.textContent = state.count + ' cámaras · ' + active.length + '/' + state.sources.length + ' fuentes activas';
+    const details = active.map((s) => s.name + ': ' + s.count).concat(failed.map((s) => s.name + ': no disponible'));
+    cameraStatus.title = details.join('\n');
+  }
+});
 
 async function loadISS() {
   try {
@@ -85,18 +144,13 @@ function updateISS() {
     const pos = Cesium.Cartesian3.fromDegrees(lon, lat, alt);
     if (!issEntity) {
       issEntity = viewer.entities.add({
-        name: 'ISS · Estación Espacial Internacional',
-        position: pos,
+        name: 'ISS · Estación Espacial Internacional', position: pos,
         point: { pixelSize: 10, color: Cesium.Color.LIME, outlineColor: Cesium.Color.WHITE, outlineWidth: 2 },
         label: { text: 'ISS', font: 'bold 13px sans-serif', fillColor: Cesium.Color.LIME, outlineColor: Cesium.Color.BLACK, outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, -18) },
         description: 'Posición estimada a partir de elementos orbitales TLE públicos de CelesTrak.'
       });
-    } else {
-      issEntity.position = pos;
-    }
-  } catch (e) {
-    console.warn('ISS position update failed', e);
-  }
+    } else issEntity.position = pos;
+  } catch (e) { console.warn('ISS position update failed', e); }
 }
 
 $('coords').textContent = 'VISTA GLOBAL · TIERRA 3D';
@@ -108,20 +162,46 @@ viewer.screenSpaceEventHandler.setInputAction((event) => {
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 document.querySelectorAll('[data-layer]').forEach(button => {
-  button.addEventListener('click', () => {
+  button.addEventListener('click', async () => {
     const layer = button.dataset.layer;
     if (layer === 'iss') {
       issVisible = !issVisible;
       if (issEntity) issEntity.show = issVisible;
+    } else if (layer === 'starlink') {
+      starlinkVisible = !starlinkVisible;
+      await starlinkLayer.setVisible(starlinkVisible);
     } else if (layer === 'haarp') {
       haarpVisible = !haarpVisible;
       haarp.show = haarpVisible;
-    } else {
-      hint.textContent = layer === 'flights'
-        ? 'La capa de vuelos todavía no está conectada a un proveedor de datos. No se mostrarán aviones inventados.'
-        : 'La capa marítima requiere un proveedor AIS y su clave de acceso. No se mostrarán barcos inventados.';
+    } else if (layer === 'cameras') {
+      camerasVisible = !camerasVisible;
+      cameraLayer.setVisible(camerasVisible);
+      if (camerasVisible && cameraLayer.entities.size === 0) await cameraLayer.refresh();
+      hint.textContent = camerasVisible
+        ? 'Cámaras públicas: tocá un marcador para ver la imagen disponible y abrir la fuente oficial.'
+        : 'Capa de cámaras públicas oculta.';
+    } else if (layer === 'flights') {
+      flightsVisible = !flightsVisible;
+      flightLayer.setVisible(flightsVisible);
+      hint.textContent = flightsVisible ? 'Vuelos ADS-B en vivo. La consulta cubre hasta 250 millas náuticas alrededor del centro del mapa; acercá y mové el globo para explorar otras regiones.' : 'Capa de vuelos oculta.';
+    } else if (layer === 'ships') {
+      shipsVisible = !shipsVisible;
+      shipLayer.setVisible(shipsVisible);
+      hint.textContent = shipsVisible ? 'Buques AIS mundiales en directo. Se priorizan en pantalla los 1.800 más cercanos al centro del globo. Requiere el proxy seguro de GODS EYE configurado en Cloudflare.' : 'Capa de tráfico marítimo oculta.';
+    } else if (layer === 'earthquakes') {
+      earthquakesVisible = !earthquakesVisible;
+      earthquakeLayer.setVisible(earthquakesVisible);
+      hint.textContent = earthquakesVisible ? 'Sismos mundiales registrados por USGS durante las últimas 24 horas.' : 'Capa de terremotos oculta.';
+    } else if (layer === 'weather') {
+      weatherVisible = !weatherVisible;
+      weatherLayer.setVisible(weatherVisible);
+      hint.textContent = weatherVisible ? 'Clima actual en el punto central del globo. Mové el mapa para consultar otra ubicación.' : 'Capa meteorológica oculta.';
+    } else if (layer === 'fires') {
+      firesVisible = !firesVisible;
+      fireLayer.setVisible(firesVisible);
+      hint.textContent = firesVisible ? 'Detecciones térmicas VIIRS de NASA FIRMS. Son puntos satelitales de calor, no confirmaciones automáticas de incendio.' : 'Capa de incendios oculta.';
     }
-    const active = layer === 'iss' ? issVisible : layer === 'haarp' ? haarpVisible : false;
+    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : layer === 'flights' ? flightsVisible : layer === 'ships' ? shipsVisible : layer === 'earthquakes' ? earthquakesVisible : layer === 'weather' ? weatherVisible : layer === 'fires' ? firesVisible : false;
     button.classList.toggle('active', active);
     button.querySelector('em').textContent = active ? 'ON' : 'OFF';
   });
@@ -130,3 +210,23 @@ document.querySelectorAll('[data-layer]').forEach(button => {
 loadISS().then(updateISS);
 setInterval(updateISS, 2500);
 setInterval(loadISS, 30 * 60 * 1000);
+setInterval(() => { if (camerasVisible) cameraLayer.refresh(); }, 60 * 1000);
+let flightRefreshTimer = null;
+let weatherRefreshTimer = null;
+viewer.camera.changed.addEventListener(() => {
+  if (flightsVisible) {
+    if (flightRefreshTimer) clearTimeout(flightRefreshTimer);
+    flightRefreshTimer = setTimeout(() => flightLayer.refresh(), 1800);
+  }
+  if (weatherVisible) {
+    if (weatherRefreshTimer) clearTimeout(weatherRefreshTimer);
+    weatherRefreshTimer = setTimeout(() => weatherLayer.refresh(), 1800);
+  }
+});
+let cameraRefreshTimer = null;
+viewer.camera.changed.addEventListener(() => {
+  if (!camerasVisible) return;
+  if (cameraRefreshTimer) clearTimeout(cameraRefreshTimer);
+  cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 5000);
+});
+window.addEventListener('beforeunload', () => { disasterWatcher.stop(); cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); earthquakeLayer.destroy(); weatherLayer.destroy(); fireLayer.destroy(); });

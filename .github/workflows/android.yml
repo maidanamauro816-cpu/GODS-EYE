@@ -2,11 +2,15 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/live-world-layers]
   workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: gods-eye-android-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -16,36 +20,51 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
-
       - name: Install dependencies
         run: npm install
-
+      - name: Validate JavaScript modules
+        run: |
+          node --check workers/ais-proxy/src/index.js
+          node --check src/services/DisasterWatcher.js
+          node --check public/runners/disaster-runner.js
       - name: Build web assets
+        env:
+          VITE_AIS_PROXY_URL: ${{ secrets.VITE_AIS_PROXY_URL }}
+          VITE_TRAFFIC_PROXY_URL: ${{ secrets.VITE_TRAFFIC_PROXY_URL }}
+          VITE_FIRE_PROXY_URL: ${{ secrets.VITE_FIRE_PROXY_URL }}
         run: npm run build
-
       - name: Generate Android project
         run: npx cap add android
-
+      - name: Configure Background Runner Android engine
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('android/app/build.gradle')
+          content = path.read_text()
+          marker = "dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'"
+          addition = marker + ", '../../node_modules/@capacitor/background-runner/android/src/main/libs'"
+          if 'background-runner/android/src/main/libs' not in content:
+              if marker not in content:
+                  raise SystemExit('Could not find Android flatDir repository block')
+              content = content.replace(marker, addition)
+              path.write_text(content)
+          PY
       - name: Sync Capacitor
         run: npx cap sync android
-
       - name: Build APK
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --no-daemon
-
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:

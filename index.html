@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050912" />
   <title>GOD'S EYE</title>
-  <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css">
+  <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.121/Build/Cesium/Widgets/widgets.css">
   <link rel="stylesheet" href="/style.css">
-  <script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/';</script>
-  <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+  <script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.121/Build/Cesium/';</script>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.121/Build/Cesium/Cesium.js"></script>
 </head>
 <body>
   <main id="app">
@@ -19,14 +19,39 @@
     <section id="globe" aria-label="Globo terráqueo 3D"></section>
     <aside class="panel">
       <div class="panel-title">CAPAS DEL MUNDO</div>
+      <div class="disaster-status" id="disaster-status">ALERTAS GLOBALES · INICIANDO</div>
+      <button data-layer="flights" class="layer"><b>✈</b><span>VUELOS EN VIVO<small id="flights-status">ADS-B · región visible</small></span><em>OFF</em></button>
+      <button data-layer="ships" class="layer"><b>🚢</b><span>BUQUES AIS EN VIVO<small id="ships-status">AIS · proxy seguro pendiente</small></span><em>OFF</em></button>
+      <button data-layer="cameras" class="layer"><b>📹</b><span>CÁMARAS Y VÍDEO<small id="camera-status">Catálogo mundial público</small></span><em>OFF</em></button>
+      <button data-layer="weather" class="layer"><b>🌦</b><span>METEOROLOGÍA<small id="weather-status">Clima del punto central</small></span><em>OFF</em></button>
+      <button data-layer="earthquakes" class="layer"><b>🌋</b><span>TERREMOTOS<small id="earthquakes-status">USGS · últimas 24 horas</small></span><em>OFF</em></button>
+      <button data-layer="fires" class="layer"><b>🔥</b><span>INCENDIOS / CALOR<small id="fires-status">NASA FIRMS · clave pendiente</small></span><em>OFF</em></button>
       <button data-layer="iss" class="layer active"><b>🛰</b><span>ISS / SATÉLITES<small id="sat-status">Preparando órbita…</small></span><em>ON</em></button>
+      <button data-layer="starlink" class="layer"><b>🛰</b><span>STARLINK · CONSTELACIÓN<small id="starlink-status">TLE orbitales CelesTrak</small></span><em>OFF</em></button>
       <button data-layer="haarp" class="layer active"><b>📡</b><span>HAARP · ALASKA<small>Instalación terrestre</small></span><em>ON</em></button>
-      <button data-layer="flights" class="layer"><b>✈</b><span>VUELOS<small>Fuente en preparación</small></span><em>OFF</em></button>
-      <button data-layer="ships" class="layer"><b>🚢</b><span>TRÁFICO MARÍTIMO<small>Requiere proveedor AIS</small></span><em>OFF</em></button>
       <div class="hint" id="hint">Tocá el globo para explorar. Arrastrá para girar y pellizcá para acercar.</div>
     </aside>
     <footer><span id="coords">MUNDO · 3D</span><span>DATOS PÚBLICOS · USO INFORMATIVO</span></footer>
+    <section id="camera-viewer" class="camera-modal" hidden>
+      <div class="camera-card">
+        <header><div><strong id="camera-title">Cámara pública</strong><small id="camera-meta"></small></div><button id="camera-close" type="button" aria-label="Cerrar cámara">✕</button></header>
+        <div class="camera-media">
+          <img id="camera-image" alt="Vista de cámara pública" hidden>
+          <video id="camera-video" controls autoplay playsinline muted hidden></video>
+          <p id="camera-message">Consultando cámara…</p>
+        </div>
+        <a id="camera-attribution" href="#" target="_blank" rel="noopener" hidden></a>
+        <a id="camera-source" href="#" target="_blank" rel="noopener">Abrir visor oficial</a>
+      </div>
+    </section>
   </main>
   <script type="module" src="/src/main.js"></script>
+  <script>
+    document.getElementById('camera-close').addEventListener('click', () => {
+      document.getElementById('camera-viewer').hidden = true;
+      const video = document.getElementById('camera-video');
+      video.pause(); video.srcObject = null;
+    });
+  </script>
 </body>
 </html>
