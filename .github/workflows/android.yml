@@ -1,16 +1,20 @@
-name: Build Android APK
+name: Build Android APK — upstream providers integrated
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/android-release, feature/gods-eye-view-integration, feature/upstream-full-app-mainline]
   workflow_dispatch:
+
+concurrency:
+  group: gods-eye-android-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build GOD'S EYE debug APK
+    name: Build EL OJO DE DIOS debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -20,7 +24,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24.14.0
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -29,13 +33,53 @@ jobs:
           java-version: '17'
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+
+      - name: Link repository package for Node self-import tests
+        run: ln -s "$GITHUB_WORKSPACE" node_modules/gods-eye-view
+
+      - name: Prepare app and web icons
+        run: |
+          node scripts/prepare-icon.mjs
+          node scripts/generate-icons.mjs
+
+      - name: Run upstream setup policy checks
+        run: npm run doctor -- --json
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+          GEV_REQUIRE_ALLOCATION_GATE: '1'
+
+      - name: Run upstream unit tests
+        run: npm test
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+          GEV_REQUIRE_ALLOCATION_GATE: '1'
+
+      - name: Apply repository formatting before release checks
+        run: npm run format
+
+      - name: Verify package boundaries
+        run: npm run check:boundaries
 
       - name: Build web assets
         run: npm run build
+        env:
+          VITE_GEV_API_ORIGIN: https://gods-eye-neon.vercel.app
+
+      - name: Verify Vercel provider middleware
+        run: |
+          node --input-type=module -e "import { createServer } from 'vite'; import { localProviderPlugins } from './server/providers/local.js'; import { standaloneVoiceTools } from './server/standalone/voiceTools.js'; const tools = standaloneVoiceTools(); const s = await createServer({ configFile: false, root: process.cwd(), appType: 'custom', plugins: localProviderPlugins({ realtime: { tools }, gemini: { tools } }), server: { middlewareMode: true, hmr: false, watch: null }, optimizeDeps: { noDiscovery: true, include: [] } }); console.log('Provider middleware stack:', s.middlewares.stack.length); if (s.middlewares.stack.length < 20) process.exit(1); await s.close();"
 
       - name: Generate Android project
         run: npx cap add android
+
+      - name: Configure Android runtime permissions
+        run: node scripts/patch-android-manifest.mjs
+
+      - name: Generate native app icons
+        run: npx capacitor-assets generate --android
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -49,7 +93,8 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: gods-eye-debug-apk
+          name: el-ojo-de-dios-integrated-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+

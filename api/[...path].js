@@ -7,19 +7,24 @@ let serverPromise;
 async function getMiddlewareServer() {
   if (!serverPromise) {
     const tools = standaloneVoiceTools();
+    // A serverless invocation can serve bounded HTTP requests, but it
+    // cannot own local SDR hardware, persist a process-wide AIS WebSocket, or
+    // safely write credentials to an ephemeral filesystem. Those three
+    // machine-local providers stay enabled in the full standalone Node build.
+    const serverlessPlugins = localProviderPlugins({
+      realtime: { tools },
+      gemini: { tools },
+    }).filter((plugin) => ![
+      'local-receivers-proxy',
+      'ais-live-proxy',
+      'gev-key-setup',
+    ].includes(plugin.name));
     serverPromise = createServer({
       configFile: false,
       root: process.cwd(),
       appType: 'custom',
-      plugins: localProviderPlugins({
-        realtime: { tools },
-        gemini: { tools },
-      }),
-      server: {
-        middlewareMode: true,
-        hmr: false,
-        watch: null,
-      },
+      plugins: serverlessPlugins,
+      server: { middlewareMode: true, hmr: false, watch: null },
       optimizeDeps: { noDiscovery: true, include: [] },
     }).catch((error) => {
       serverPromise = undefined;
@@ -59,10 +64,16 @@ export default async function handler(req, res) {
 
     if (process.env.VERCEL === '1') {
       req.headers = { ...req.headers };
-      // Vercel terminates TLS before the function. Reflect the original scheme
-      // for the upstream exact-Origin comparison and remove only platform
-      // transport metadata; Origin/Host checks remain active in provider code.
-      try { Object.defineProperty(req.socket, 'encrypted', { value: true, configurable: true }); } catch { /* immutable runtime socket */ }
+      // Vercel terminates TLS before invoking Node. Normalize the socket
+      // scheme and strip only platform forwarding metadata before local gates.
+      try {
+        Object.defineProperty(req.socket, 'encrypted', {
+          value: true,
+          configurable: true,
+        });
+      } catch {
+        /* immutable runtime socket */
+      }
       for (const name of [
         'forwarded', 'via', 'x-forwarded-for', 'x-forwarded-host',
         'x-forwarded-port', 'x-forwarded-proto', 'x-real-ip',
@@ -89,8 +100,8 @@ export default async function handler(req, res) {
         cleanup();
         reject(error);
       };
-      // Connect middleware normally ends the response without calling next().
-      // Resolve on the actual response lifecycle, not only on the next callback.
+      // Provider middleware usually ends the response without calling next().
+      // Resolve on response completion as well as on Connect's next callback.
       res.once('finish', finish);
       res.once('close', finish);
       try {
@@ -106,7 +117,7 @@ export default async function handler(req, res) {
       } catch (error) {
         fail(error);
       }
-    });;
+    });
   } catch (error) {
     console.error('[Gods Eye API adapter]', error?.stack || error);
     if (!res.headersSent) {
