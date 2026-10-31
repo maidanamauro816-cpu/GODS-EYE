@@ -98,7 +98,7 @@ const fireLayer = new FireLayer(viewer, state => {
 let issEntity = null;
 let starlinkVisible = false;
 const starlinkLayer = new SatelliteLayer(viewer, (state) => {
-  const el = $('starlink-status');
+  const el = $('sat-status');
   if (el) el.textContent = state.loading ? 'Descargando TLE de CelesTrak…' : state.error ? state.error : state.count + ' objetos orbitales · CelesTrak';
 });
 let issVisible = false;
