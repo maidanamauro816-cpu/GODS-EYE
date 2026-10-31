@@ -15,8 +15,8 @@ export async function fetchFires({bbox,signal}={}){
   const response=await fetch(url,{signal,headers:{Accept:"text/csv"},cache:"no-store"});
   if(!response.ok)throw new Error("NASA FIRMS HTTP "+response.status);
   const rows=parseCsv(await response.text());
-  return rows.map((r,i)=>({
-    id:[r.latitude,r.longitude,r.acq_date,r.acq_time,r.satellite].join("-")+i,
+  return rows.map(r=>({
+    id:[r.latitude,r.longitude,r.acq_date,r.acq_time,r.satellite].join("-"),
     lat:+r.latitude,lon:+r.longitude,confidence:r.confidence||"unknown",
     frp:Number.isFinite(+r.frp)?+r.frp:null,
     date:r.acq_date,time:r.acq_time,satellite:r.satellite||"VIIRS",
