@@ -6,6 +6,7 @@ import { ShipLayer } from './layers/ShipLayer.js';
 import { EarthquakeLayer } from './layers/EarthquakeLayer.js';
 import { WeatherLayer } from './layers/WeatherLayer.js';
 import { FireLayer } from './layers/FireLayer.js';
+import { DisasterWatcher } from './services/DisasterWatcher.js';
 
 const $ = (id) => document.getElementById(id);
 const hint = $('hint');
@@ -23,6 +24,23 @@ const viewer = new Cesium.Viewer('globe', {
   shouldAnimate: true, imageryProvider: false,
   terrainProvider: new Cesium.EllipsoidTerrainProvider()
 });
+const disasterWatcher = new DisasterWatcher({
+  onAlert: (alert) => {
+    hint.textContent = alert.title + ' · ' + alert.body;
+    hint.classList.add('alert-pulse');
+    window.setTimeout(() => hint.classList.remove('alert-pulse'), 5000);
+  },
+  onStatus: (state) => {
+    const el = $('disaster-status');
+    if (el) el.textContent = state.active ? 'VIGILANCIA ACTIVA · ' + (state.checkedAt ? new Date(state.checkedAt).toLocaleTimeString() : 'iniciando') : 'INACTIVA';
+  },
+  onNavigate: ({ lat, lon }) => viewer.camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(lon, lat, 500000),
+    duration: 2
+  })
+});
+disasterWatcher.start().catch(error => console.warn('Disaster watcher:', error));
+
 viewer.imageryLayers.removeAll();
 viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
   url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -211,4 +229,4 @@ viewer.camera.changed.addEventListener(() => {
   if (cameraRefreshTimer) clearTimeout(cameraRefreshTimer);
   cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 5000);
 });
-window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); earthquakeLayer.destroy(); weatherLayer.destroy(); fireLayer.destroy(); });
+window.addEventListener('beforeunload', () => { disasterWatcher.stop(); cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); earthquakeLayer.destroy(); weatherLayer.destroy(); fireLayer.destroy(); });
