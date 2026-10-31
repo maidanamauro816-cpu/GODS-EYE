@@ -1,4 +1,4 @@
-name: One-time repository formatting
+name: One-time repository formatting # latest mobile tabs
 
 on:
   push:
