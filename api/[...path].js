@@ -7,14 +7,23 @@ let serverPromise;
 async function getMiddlewareServer() {
   if (!serverPromise) {
     const tools = standaloneVoiceTools();
+    // A serverless invocation can serve bounded HTTP requests, but it
+    // cannot own local SDR hardware, persist a process-wide AIS WebSocket, or
+    // safely write credentials to an ephemeral filesystem. Those three
+    // machine-local providers stay enabled in the full standalone Node build.
+    const serverlessPlugins = localProviderPlugins({
+      realtime: { tools },
+      gemini: { tools },
+    }).filter((plugin) => ![
+      'local-receivers-proxy',
+      'ais-live-proxy',
+      'gev-key-setup',
+    ].includes(plugin.name));
     serverPromise = createServer({
       configFile: false,
       root: process.cwd(),
       appType: 'custom',
-      plugins: localProviderPlugins({
-        realtime: { tools },
-        gemini: { tools },
-      }),
+      plugins: serverlessPlugins,
       server: { middlewareMode: true, hmr: false, watch: null },
       optimizeDeps: { noDiscovery: true, include: [] },
     }).catch((error) => {
