@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050912" />
+  <title>GOD'S EYE</title>
+  <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css">
+  <link rel="stylesheet" href="/style.css">
+  <script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/';</script>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+</head>
+<body>
+  <main id="app">
+    <header class="topbar">
+      <div><div class="brand">GOD'S <span>EYE</span></div><div class="subtitle">WORLD INTELLIGENCE GLOBE</div></div>
+      <div class="live"><i></i> GLOBO 3D</div>
+    </header>
+    <section id="globe" aria-label="Globo terráqueo 3D"></section>
+    <aside class="panel">
+      <div class="panel-title">CAPAS DEL MUNDO</div>
+      <button data-layer="iss" class="layer active"><b>🛰</b><span>ISS / SATÉLITES<small id="sat-status">Preparando órbita…</small></span><em>ON</em></button>
+      <button data-layer="haarp" class="layer active"><b>📡</b><span>HAARP · ALASKA<small>Instalación terrestre</small></span><em>ON</em></button>
+      <button data-layer="flights" class="layer"><b>✈</b><span>VUELOS<small>Fuente en preparación</small></span><em>OFF</em></button>
+      <button data-layer="ships" class="layer"><b>🚢</b><span>TRÁFICO MARÍTIMO<small>Requiere proveedor AIS</small></span><em>OFF</em></button>
+      <div class="hint" id="hint">Tocá el globo para explorar. Arrastrá para girar y pellizcá para acercar.</div>
+    </aside>
+    <footer><span id="coords">MUNDO · 3D</span><span>DATOS PÚBLICOS · USO INFORMATIVO</span></footer>
+  </main>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
