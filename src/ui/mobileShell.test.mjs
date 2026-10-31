@@ -263,6 +263,70 @@ test('flight and satellite shortcuts open the layer panel and notify the app', (
   shell.destroy();
 });
 
+test('mobile camera, flight and satellite shortcuts enable their matching layers', async () => {
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
+  const previousFrame = Object.getOwnPropertyDescriptor(
+    globalThis,
+    'requestAnimationFrame',
+  );
+  const scrolls = [];
+  const row = { scrollIntoView: (options) => scrolls.push(options) };
+  Object.defineProperty(globalThis, 'document', {
+    configurable: true,
+    value: {
+      getElementById: (id) =>
+        id === 'data-panel' ? { querySelector: () => row } : null,
+    },
+  });
+  Object.defineProperty(globalThis, 'requestAnimationFrame', {
+    configurable: true,
+    value: (callback) => callback(),
+  });
+  const enabled = new Set();
+  const calls = [];
+  const shell = {
+    _disposed: false,
+    _dataManager: {
+      async setEnabled(layerId, value, options) {
+        calls.push({ layerId, value, ...options });
+        if (value) enabled.add(layerId);
+        else enabled.delete(layerId);
+      },
+      isEnabled: (layerId) => enabled.has(layerId),
+    },
+    _showToast: (message) => assert.fail(message),
+  };
+  try {
+    for (const [sheet, layerId] of [
+      ['cameras', 'cctv'],
+      ['flights', 'flights'],
+      ['satellites', 'satellites'],
+    ]) {
+      assert.equal(
+        await StyleManager.prototype._onMobileTabOpened.call(shell, sheet),
+        true,
+      );
+      assert.ok(enabled.has(layerId));
+    }
+    assert.deepEqual(
+      calls.map(({ layerId, value, origin }) => ({ layerId, value, origin })),
+      [
+        { layerId: 'cctv', value: true, origin: 'user' },
+        { layerId: 'flights', value: true, origin: 'user' },
+        { layerId: 'satellites', value: true, origin: 'user' },
+      ],
+    );
+    assert.equal(scrolls.length, 2, 'flight and satellite rows are brought into view');
+  } finally {
+    if (previousDocument)
+      Object.defineProperty(globalThis, 'document', previousDocument);
+    else delete globalThis.document;
+    if (previousFrame)
+      Object.defineProperty(globalThis, 'requestAnimationFrame', previousFrame);
+    else delete globalThis.requestAnimationFrame;
+  }
+});
+
 test('pressing a tab opens its sheet, pressing it again closes it', () => {
   assert.equal(nextSheet(null, 'layers'), 'layers');
   assert.equal(nextSheet('layers', 'layers'), null);
@@ -718,7 +782,7 @@ test('touches outside the active sheet and destroyed listeners cannot dismiss or
 test('the tab-open callback reports only a successful manual opening', () => {
   const opened = [];
   const phone = fixture({ onTabOpened: (sheet) => opened.push(sheet) });
-  phone.shell.setSheet('more');
+  phone.shell.setSheet('context');
   assert.deepEqual(opened, []);
   phone.press('context');
   assert.deepEqual(opened, [], 'closing is not a new context request');
