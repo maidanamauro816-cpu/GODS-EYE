@@ -58,7 +58,7 @@ jobs:
           GEV_REQUIRE_ALLOCATION_GATE: '1'
 
       - name: Apply repository formatting before release checks
-        run: npm run format -- --write
+        run: npm run format
 
       - name: Verify package boundaries
         run: npm run check:boundaries
