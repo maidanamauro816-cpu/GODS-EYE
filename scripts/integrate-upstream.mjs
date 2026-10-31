@@ -25,6 +25,38 @@ for (const file of ['index.html', 'style.css', 'vite.config.js', 'DATA_SOURCES.m
   const from = path.join(upstream, file);
   if (existsSync(from)) await copyFile(from, path.join(root, file));
 }
+// Restore EL OJO DE DIOS branding after importing the upstream UI.
+const brandIcon = path.join(root, 'assets', 'icon.svg');
+if (existsSync(brandIcon)) {
+  const publicLogo = path.join(root, 'public', 'logo.svg');
+  await copyFile(brandIcon, publicLogo);
+  let logo = await readFile(publicLogo, 'utf8');
+  logo = logo.replace('<svg xmlns=', '<svg role="img" aria-labelledby="brand-title" xmlns=');
+  logo = logo.replace('viewBox="0 0 512 512">', 'viewBox="0 0 512 512"><title id="brand-title">EL OJO DE DIOS</title>');
+  await writeFile(publicLogo, logo);
+}
+const htmlPath = path.join(root, 'index.html');
+let html = await readFile(htmlPath, 'utf8');
+html = html.replace('<html lang="en">', '<html lang="es">');
+html = html.replace("<title>God's Eye View</title>", '<title>EL OJO DE DIOS</title>');
+html = html.replace('<meta name="apple-mobile-web-app-title" content="God\'s Eye" />', '<meta name="apple-mobile-web-app-title" content="EL OJO DE DIOS" />');
+await writeFile(htmlPath, html);
+const manifestPath = path.join(root, 'public', 'manifest.webmanifest');
+if (existsSync(manifestPath)) {
+  const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+  manifest.name = 'EL OJO DE DIOS';
+  manifest.short_name = 'OJO DE DIOS';
+  manifest.description = 'Globo 3D e inteligencia geoespacial en tiempo real.';
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\\n');
+}
+const chromePath = path.join(root, 'src', 'ui', 'templates', 'scene-chrome.html');
+let chrome = await readFile(chromePath, 'utf8');
+chrome = chrome.replace(
+  '<span class="title-logo brand-logo" data-logo-gaze data-logo-src="/logo.svg" aria-hidden="true"><img src="/logo.svg" alt="" /></span> <span translate="no">GOD\'S EYE <span class="title-accent">VIEW</span></span>',
+  '<span class="title-logo brand-logo" aria-hidden="true"><img src="/logo.svg" alt="" /></span> <span translate="no">EL OJO <span class="title-accent">DE DIOS</span></span>',
+);
+await writeFile(chromePath, chrome);
+
 const pkgPath = path.join(root, 'package.json');
 const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
 pkg.name = 'gods-eye-world';
