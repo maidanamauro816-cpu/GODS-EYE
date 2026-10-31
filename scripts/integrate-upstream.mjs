@@ -77,19 +77,22 @@ await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 const mainPath = path.join(root, 'src', 'main.js');
 let main = await readFile(mainPath, 'utf8');
 const bridge = [
-  "const GODS_EYE_API_ORIGIN = 'https://gods-eye-neon.vercel.app';",
-  'const godsEyeFetch = globalThis.fetch.bind(globalThis);',
-  'globalThis.fetch = (input, init) => {',
-  "  const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url;",
-  "  if (typeof raw === 'string' && raw.startsWith('/api/')) {",
-  '    const absolute = GODS_EYE_API_ORIGIN + raw;',
-  '    if (input instanceof Request) return godsEyeFetch(new Request(absolute, input), init);',
-  '    return godsEyeFetch(absolute, init);',
-  '  }',
-  '  return godsEyeFetch(input, init);',
-  '};',
+  "import { Capacitor } from '@capacitor/core';",
+  "const GODS_EYE_API_ORIGIN = import.meta.env.VITE_GEV_API_ORIGIN || 'https://gods-eye-neon.vercel.app';",
+  'if (Capacitor.isNativePlatform()) {',
+  '  const godsEyeFetch = globalThis.fetch.bind(globalThis);',
+  '  globalThis.fetch = (input, init) => {',
+  "    const raw = typeof input === 'string' ? input : input instanceof URL ? input.href : input?.url;",
+  "    if (typeof raw === 'string' && raw.startsWith('/api/')) {",
+  '      const absolute = GODS_EYE_API_ORIGIN + raw;',
+  '      if (input instanceof Request) return godsEyeFetch(new Request(absolute, input), init);',
+  '      return godsEyeFetch(absolute, init);',
+  '    }',
+  '    return godsEyeFetch(input, init);',
+  '  };',
+  '}',
   '',
-].join('\n');
+].join('\\n');
 if (!main.includes('GODS_EYE_API_ORIGIN')) main = bridge + main;
 await writeFile(mainPath, main);
 
