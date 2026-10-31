@@ -31,6 +31,8 @@ jobs:
           java-version: '17'
       - name: Install dependencies
         run: npm install
+      - name: Validate Cloudflare proxy syntax
+        run: node --check workers/ais-proxy/src/index.js
       - name: Build web assets
         env:
           VITE_AIS_PROXY_URL: ${{ secrets.VITE_AIS_PROXY_URL }}
