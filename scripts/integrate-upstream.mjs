@@ -11,7 +11,7 @@ for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
   const ownFile = path.join(root, 'scripts', name);
   if (existsSync(ownFile)) await copyFile(ownFile, path.join(preservedDir, name));
 }
-for (const dir of ['src', 'server', 'build', 'config', 'public', 'docs', 'tools']) {
+for (const dir of ['src', 'server', 'build', 'config', 'public', 'docs', 'tools', 'changelog.d', 'pinokio', '.agents']) {
   await cp(path.join(upstream, dir), path.join(root, dir), { recursive: true, force: true });
 }
 await cp(path.join(upstream, 'scripts'), path.join(root, 'scripts'), { recursive: true, force: true });
@@ -21,7 +21,7 @@ for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
 }
 const iconPreparer = path.join(root, 'scripts', 'prepare-icon.mjs');
 if (!existsSync(iconPreparer)) throw new Error('Android icon preparation script was not preserved');
-for (const file of ['index.html', 'style.css', 'vite.config.js', 'DATA_SOURCES.md', 'LICENSE', 'README.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'package.json']) {
+for (const file of ['index.html', 'style.css', 'vite.config.js', 'DATA_SOURCES.md', 'LICENSE', 'README.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'package.json', 'package-lock.json', 'CHANGELOG.md', 'CONTRIBUTING.md', 'TESTING.md', '.env.example', '.gitignore', '.dockerignore', '.prettierignore', '.prettierrc.json', 'Dockerfile', 'compose.yaml']) {
   const from = path.join(upstream, file);
   if (existsSync(from)) await copyFile(from, path.join(root, file));
 }
@@ -59,7 +59,7 @@ await writeFile(chromePath, chrome);
 
 const pkgPath = path.join(root, 'package.json');
 const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
-pkg.name = 'gods-eye-world';
+pkg.name = 'gods-eye-view';
 pkg.private = true;
 pkg.scripts = { ...pkg.scripts, 'cap:sync': 'cap sync android', 'android:assets': 'capacitor-assets generate --android' };
 pkg.dependencies = {
