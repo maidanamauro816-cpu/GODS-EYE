@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -28,14 +28,32 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Download upstream source
+        run: git clone --depth 1 https://github.com/bilawalsidhu/gods-eye-view.git /tmp/gods-eye-view
+
+      - name: Integrate upstream application and providers
+        run: node scripts/integrate-upstream.mjs
+        env:
+          GEV_UPSTREAM_DIR: /tmp/gods-eye-view
+
       - name: Install dependencies
-        run: npm install
+        run: npm install --no-audit --no-fund
 
       - name: Prepare app icon
         run: node scripts/prepare-icon.mjs
 
       - name: Build web assets
         run: npm run build
+
+      - name: Verify Vercel provider middleware
+        run: |
+          node --input-type=module -e "import { createServer } from 'vite'; import { localProviderPlugins } from './server/providers/local.js'; import { standaloneVoiceTools } from './server/standalone/voiceTools.js'; const tools = standaloneVoiceTools(); const s = await createServer({ configFile: false, root: process.cwd(), appType: 'custom', plugins: localProviderPlugins({ realtime: { tools }, gemini: { tools } }), server: { middlewareMode: true, hmr: false, watch: null }, optimizeDeps: { noDiscovery: true, include: [] } }); console.log('Provider middleware stack:', s.middlewares.stack.length); if (s.middlewares.stack.length < 20) process.exit(1); await s.close();"
 
       - name: Generate Android project
         run: npx cap add android
@@ -55,7 +73,19 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: el-ojo-de-dios-debug-apk
+          name: el-ojo-de-dios-integrated-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+
+      - name: Commit integrated upstream source
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A src server build config public docs tools scripts package.json package-lock.json index.html style.css vite.config.js DATA_SOURCES.md LICENSE README.md SECURITY.md THIRD_PARTY_NOTICES.md api
+          if git diff --cached --quiet; then
+            echo "Integrated source is already current."
+            exit 0
+          fi
+          git commit -m "Integrate upstream providers and Android bridge [skip ci]"
+          git push origin HEAD:feature/gods-eye-view-integration
