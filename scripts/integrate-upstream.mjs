@@ -33,6 +33,7 @@ pkg.scripts = { ...pkg.scripts, 'cap:sync': 'cap sync android', 'android:assets'
 pkg.dependencies = {
   ...pkg.dependencies,
   vite: pkg.devDependencies.vite,
+  ws: pkg.devDependencies.ws,
   'vite-plugin-cesium': pkg.devDependencies['vite-plugin-cesium'],
   '@capacitor/android': '^6.2.0',
   '@capacitor/core': '^6.2.0',
