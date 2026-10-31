@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { defaultCacheDir } from './common/cache-dir.js';
 import https from 'node:https';
 import { promises as fsp } from 'node:fs';
 import { Readable } from 'node:stream';
@@ -165,7 +166,7 @@ export function firmsProxy() {
    * bound, not a budget.
    */
   const FIRMS_MAX_RESPONSE_BYTES = 64 * 1024 * 1024;
-  const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
+  const CACHE_DIR = defaultCacheDir();
   const CACHE_PATH = path.join(CACHE_DIR, 'firms.json');
 
   /** @type {?{at: number, sources: Array<object>, fires: Array<object>}} */
