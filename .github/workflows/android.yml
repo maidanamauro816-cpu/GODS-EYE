@@ -28,12 +28,6 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
       - name: Download upstream source
         run: git clone --depth 1 https://github.com/bilawalsidhu/gods-eye-view.git /tmp/gods-eye-view
 
