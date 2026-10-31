@@ -17,3 +17,5 @@
 .camera-source-link{display:inline-block;margin-top:12px;color:#8df2c5;font-size:11px}
 .camera-legal-note{display:block;color:#718ba5;font-size:9px;line-height:1.45;margin-top:10px}
 @media(max-width:480px){.camera-list{max-height:115px}.camera-viewer{padding:8px}.camera-viewer-card{padding:10px;max-height:92dvh}}
+
+.environment-tools{max-height:38vh;overflow:auto;margin-top:10px}.environment-list{display:grid;gap:6px;margin-top:8px}.environment-row{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:#0b1725;border:1px solid #25394e;border-radius:8px;color:#eaf5ff;padding:9px;cursor:pointer}.environment-row>span:nth-child(2){min-width:0;flex:1}.environment-row b{display:block;font-size:11px}.environment-row small{display:block;color:#91a8bc;font-size:9px;margin-top:3px}.environment-row em{font-size:10px;color:#f6c76b;font-style:normal}.environment-icon{font-size:17px}
