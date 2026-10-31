@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main, feature/android-release]
+    branches: [main, feature/android-release, feature/gods-eye-view-integration]
   workflow_dispatch:
 
 permissions:
@@ -20,7 +20,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24.14.0
 
       - name: Set up Java
         uses: actions/setup-java@v4
