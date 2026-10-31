@@ -5,6 +5,7 @@ import { FlightLayer } from './layers/FlightLayer.js';
 import { ShipLayer } from './layers/ShipLayer.js';
 import { EarthquakeLayer } from './layers/EarthquakeLayer.js';
 import { WeatherLayer } from './layers/WeatherLayer.js';
+import { FireLayer } from './layers/FireLayer.js';
 
 const $ = (id) => document.getElementById(id);
 const hint = $('hint');
@@ -49,6 +50,7 @@ let flightsVisible = false;
 let shipsVisible = false;
 let earthquakesVisible = false;
 let weatherVisible = false;
+let firesVisible = false;
 const flightLayer = new FlightLayer(viewer, state => {
   const el = $('flights-status');
   if (el) el.textContent = state.loading ? 'Consultando ADS-B…' : state.error ? state.error : state.count + ' aeronaves · ' + (state.coverage || 'ADS-B');
@@ -64,6 +66,10 @@ const earthquakeLayer = new EarthquakeLayer(viewer, state => {
 const weatherLayer = new WeatherLayer(viewer, state => {
   const el = $('weather-status');
   if (el) el.textContent = state.loading ? 'Consultando Open-Meteo…' : state.error ? state.error : state.temperature + ' °C · ' + (state.summary || 'clima actual');
+});
+const fireLayer = new FireLayer(viewer, state => {
+  const el = $('fires-status');
+  if (el) el.textContent = state.loading ? 'Consultando NASA FIRMS…' : state.error ? state.error : state.count + ' detecciones VIIRS · 24 h';
 });
 let issEntity = null;
 let starlinkVisible = false;
@@ -172,8 +178,12 @@ document.querySelectorAll('[data-layer]').forEach(button => {
       weatherVisible = !weatherVisible;
       weatherLayer.setVisible(weatherVisible);
       hint.textContent = weatherVisible ? 'Clima actual en el punto central del globo. Mové el mapa para consultar otra ubicación.' : 'Capa meteorológica oculta.';
+    } else if (layer === 'fires') {
+      firesVisible = !firesVisible;
+      fireLayer.setVisible(firesVisible);
+      hint.textContent = firesVisible ? 'Detecciones térmicas VIIRS de NASA FIRMS. Son puntos satelitales de calor, no confirmaciones automáticas de incendio.' : 'Capa de incendios oculta.';
     }
-    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : layer === 'flights' ? flightsVisible : layer === 'ships' ? shipsVisible : layer === 'earthquakes' ? earthquakesVisible : layer === 'weather' ? weatherVisible : false;
+    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : layer === 'flights' ? flightsVisible : layer === 'ships' ? shipsVisible : layer === 'earthquakes' ? earthquakesVisible : layer === 'weather' ? weatherVisible : layer === 'fires' ? firesVisible : false;
     button.classList.toggle('active', active);
     button.querySelector('em').textContent = active ? 'ON' : 'OFF';
   });
@@ -201,4 +211,4 @@ viewer.camera.changed.addEventListener(() => {
   if (cameraRefreshTimer) clearTimeout(cameraRefreshTimer);
   cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 1500);
 });
-window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); earthquakeLayer.destroy(); weatherLayer.destroy(); });
+window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); earthquakeLayer.destroy(); weatherLayer.destroy(); fireLayer.destroy(); });
