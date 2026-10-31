@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.godseye.world',
-  appName: "GOD'S EYE",
+  appName: "EL OJO DE DIOS",
   webDir: 'dist',
   bundledWebRuntime: false,
   android: {
