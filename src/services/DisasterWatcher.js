@@ -155,7 +155,7 @@ export class DisasterWatcher {
     const response = await fetch(proxy + '?bbox=' + encodeURIComponent(bbox), { cache: 'no-store', signal: AbortSignal.timeout(15000) });
     if (!response.ok) throw new Error('NASA FIRMS HTTP ' + response.status);
     const csv = await response.text();
-    const lines = csv.trim().split(/\\r?\\n/);
+    const lines = csv.trim().split(/\r?\n/);
     if (lines.length < 2) return;
     const headers = lines[0].split(',').map(x => x.trim());
     const index = name => headers.indexOf(name);
