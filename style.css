@@ -15,3 +15,5 @@
 
 .panel{max-height:calc(100vh - 150px);overflow-y:auto;overscroll-behavior:contain}.panel::-webkit-scrollbar{width:3px}.panel::-webkit-scrollbar-thumb{background:#29465e;border-radius:4px}
 @media(max-width:480px){.panel{max-height:calc(100vh - 140px)}}
+
+.disaster-status{margin:0 4px 8px;padding:7px 8px;border:1px solid #3a3440;border-radius:7px;background:#17121b;color:#ffb36a;font-size:9px;letter-spacing:.7px;font-weight:700}.alert-pulse{color:#ffbf78!important;text-shadow:0 0 10px #ff6a35}
