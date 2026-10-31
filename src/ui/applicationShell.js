@@ -915,7 +915,7 @@ export class StyleManager extends ShellFacade {
 
     const context = this.getContextModeState();
     if (
-      sheet !== 'more' ||
+      sheet !== 'context' ||
       this._disposed ||
       !context ||
       context.mode ||
