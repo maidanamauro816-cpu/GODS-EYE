@@ -37,6 +37,9 @@ pkg.scripts = {
 };
 pkg.dependencies = {
   ...pkg.dependencies,
+  // Vercel's serverless adapter runs the upstream Vite middleware in production.
+  vite: pkg.devDependencies.vite,
+  'vite-plugin-cesium': pkg.devDependencies['vite-plugin-cesium'],
   '@capacitor/android': '^6.2.0',
   '@capacitor/core': '^6.2.0',
   '@capacitor/local-notifications': '^6.1.0',
