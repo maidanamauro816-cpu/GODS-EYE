@@ -36,8 +36,12 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
           ALLOWED_ORIGINS: ${{ secrets.AIS_ALLOWED_ORIGINS }}
+          FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
         run: |
           printf '%s' "$AISSTREAM_API_KEY" | npx --yes wrangler@4 secret put AISSTREAM_API_KEY --config workers/ais-proxy/wrangler.toml
           if [ -n "$ALLOWED_ORIGINS" ]; then
             printf '%s' "$ALLOWED_ORIGINS" | npx --yes wrangler@4 secret put ALLOWED_ORIGINS --config workers/ais-proxy/wrangler.toml
+          fi
+          if [ -n "$FIRMS_MAP_KEY" ]; then
+            printf '%s' "$FIRMS_MAP_KEY" | npx --yes wrangler@4 secret put FIRMS_MAP_KEY --config workers/ais-proxy/wrangler.toml
           fi
