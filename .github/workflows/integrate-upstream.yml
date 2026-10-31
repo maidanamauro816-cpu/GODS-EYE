@@ -32,6 +32,12 @@ jobs:
         with:
           node-version: 24.14.0
 
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
       - name: Download upstream source
         run: git clone --depth 1 https://github.com/bilawalsidhu/gods-eye-view.git /tmp/gods-eye-view
 
@@ -45,6 +51,28 @@ jobs:
 
       - name: Verify browser build
         run: npm run build
+
+      - name: Verify Vercel provider middleware initializes
+        run: |
+          node --input-type=module -e "import { createServer } from 'vite'; const s = await createServer({ configFile: 'server/standalone/vite.config.js', appType: 'custom', server: { middlewareMode: true, hmr: false, watch: null }, optimizeDeps: { noDiscovery: true, include: [] } }); console.log('Provider middleware stack:', s.middlewares.stack.length); if (!s.middlewares.stack.length) process.exit(1); await s.close();"
+
+      - name: Build Android application
+        run: |
+          node scripts/prepare-icon.mjs
+          npx cap add android
+          npx capacitor-assets generate --android
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: el-ojo-de-dios-integrated-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
 
       - name: Commit integrated source
         run: |
