@@ -19,6 +19,31 @@ for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
   const saved = path.join(preservedDir, name);
   if (existsSync(saved)) await copyFile(saved, path.join(root, 'scripts', name));
 }
+// Vercel's source filesystem is read-only. Keep provider caches in /tmp there,
+// while preserving the normal persistent .gev-cache directory on self-hosted Node.
+const cacheDirPath = path.join(root, 'server', 'providers', 'common', 'cache-dir.js');
+await mkdir(path.dirname(cacheDirPath), { recursive: true });
+await writeFile(cacheDirPath, `import path from 'node:path';
+
+/** Persistent cache for Node hosts; writable ephemeral cache for Vercel. */
+export function defaultCacheDir() {
+  const configured = String(process.env.GEV_CACHE_DIR || '').trim();
+  if (configured) return path.resolve(configured);
+  if (process.env.VERCEL === '1') return '/tmp/gev-cache';
+  return path.join(process.cwd(), '.gev-cache');
+}
+`);
+async function patchCachePath(relativePath, importLine, from, to) {
+  const file = path.join(root, relativePath);
+  let source = await readFile(file, 'utf8');
+  if (!source.includes(importLine)) source = source.replace("import path from 'node:path';", `import path from 'node:path';\\n${importLine}`);
+  source = source.replace(from, to);
+  await writeFile(file, source);
+}
+await patchCachePath('server/providers/overpass/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'overpass')", "path.join(defaultCacheDir(), 'overpass')");
+await patchCachePath('server/providers/military-installations/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(\\n  process.cwd(),\\n  '.gev-cache',\\n  'military-installations',\\n)", "path.join(defaultCacheDir(), 'military-installations')");
+await patchCachePath('server/providers/traffic.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'tomtom')", "path.join(defaultCacheDir(), 'tomtom')");
+await patchCachePath('server/providers/ghostMaps.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'ghostmaps')", "path.join(defaultCacheDir(), 'ghostmaps')");
 const iconPreparer = path.join(root, 'scripts', 'prepare-icon.mjs');
 if (!existsSync(iconPreparer)) throw new Error('Android icon preparation script was not preserved');
 for (const file of ['index.html', 'style.css', 'vite.config.js', 'DATA_SOURCES.md', 'LICENSE', 'README.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'package.json', 'package-lock.json', 'CHANGELOG.md', 'CONTRIBUTING.md', 'TESTING.md', '.env.example', '.gitignore', '.dockerignore', '.prettierignore', '.prettierrc.json', 'Dockerfile', 'compose.yaml']) {
