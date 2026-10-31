@@ -881,11 +881,41 @@ export class StyleManager extends ShellFacade {
     });
   }
 
-  /** Reveal a tracked aircraft through Contacts when its phone tab is opened. */
+  /** Enable the layer named by a phone shortcut; More retains Contacts discovery. */
   async _onMobileTabOpened(sheet) {
+    const layerId =
+      sheet === 'cameras'
+        ? 'cctv'
+        : sheet === 'flights' || sheet === 'satellites'
+          ? sheet
+          : null;
+    if (layerId) {
+      if (this._disposed || !this._dataManager) return false;
+      try {
+        await this._dataManager.setEnabled(layerId, true, { origin: 'user' });
+        if (!this._dataManager.isEnabled(layerId)) {
+          this._showToast(t('Could not open the requested layer; try again'));
+          return false;
+        }
+        if (layerId !== 'cctv') {
+          globalThis.requestAnimationFrame?.(() => {
+            const row = document
+              .getElementById('data-panel')
+              ?.querySelector?.(`[data-layer-id="${layerId}"]`);
+            row?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+          });
+        }
+        return true;
+      } catch {
+        if (!this._disposed)
+          this._showToast(t('Could not open the requested layer; try again'));
+        return false;
+      }
+    }
+
     const context = this.getContextModeState();
     if (
-      sheet !== 'context' ||
+      sheet !== 'more' ||
       this._disposed ||
       !context ||
       context.mode ||
