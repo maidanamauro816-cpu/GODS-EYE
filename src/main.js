@@ -156,6 +156,7 @@ function updateISS() {
         description: 'Posición estimada a partir de elementos orbitales TLE públicos de CelesTrak.'
       });
     } else issEntity.position = pos;
+    issEntity.show = issVisible;
   } catch (e) { console.warn('ISS position update failed', e); }
 }
 
