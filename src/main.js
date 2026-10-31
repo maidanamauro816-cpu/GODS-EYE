@@ -169,7 +169,7 @@ document.querySelectorAll('[data-layer]').forEach(button => {
     } else if (layer === 'ships') {
       shipsVisible = !shipsVisible;
       shipLayer.setVisible(shipsVisible);
-      hint.textContent = shipsVisible ? 'Buques AIS mundiales en directo. Se priorizan en pantalla los 1.800 más cercanos al centro del globo. Requiere el proxy seguro de GOD'S EYE configurado en Cloudflare.' : 'Capa de tráfico marítimo oculta.';
+      hint.textContent = shipsVisible ? 'Buques AIS mundiales en directo. Se priorizan en pantalla los 1.800 más cercanos al centro del globo. Requiere el proxy seguro de GODS EYE configurado en Cloudflare.' : 'Capa de tráfico marítimo oculta.';
     } else if (layer === 'earthquakes') {
       earthquakesVisible = !earthquakesVisible;
       earthquakeLayer.setVisible(earthquakesVisible);
