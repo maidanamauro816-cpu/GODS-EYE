@@ -80,7 +80,7 @@ export class DisasterWatcher {
   async checkAll() {
     if (this.busy || !this.running) return;
     this.busy = true;
-    const outcomes = await Promise.allSettled([this.checkEarthquakes(), this.checkNasaEvents(), this.checkStorms()]);
+    const outcomes = await Promise.allSettled([this.checkEarthquakes(), this.checkNasaEvents(), this.checkStorms(), this.checkFirms()]);
     const failed = outcomes.filter(x => x.status === 'rejected').length;
     this.onStatus({ active: true, failedSources: failed, checkedAt: new Date().toISOString() });
     this.busy = false;
@@ -135,14 +135,44 @@ export class DisasterWatcher {
       const categories = (event.categories || []).map(c => c.id || c.title);
       if (!categories.some(c => accepted.has(c))) continue;
       const point = eventCoordinates(event);
-      const coords = point && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? point : { lat: 0, lon: 0 };
+      const coords = point && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? point : null;
       const category = (event.categories || []).map(c => c.title || c.id).join(', ') || 'Evento natural';
       await this.notify({
         key: 'eonet:' + event.id, channelId: 'desastres-live',
         title: '🌍 ' + (event.title || 'Evento natural detectado'),
         body: category + (event.description ? ' · ' + event.description : '') + (point ? ' · ' + point.lat.toFixed(2) + ', ' + point.lon.toFixed(2) : ''),
-        lat: coords.lat, lon: coords.lon,
+        lat: coords?.lat ?? null, lon: coords?.lon ?? null,
         metadata: { kind: 'natural-event', eventId: event.id, category }
+      });
+    }
+  }
+
+
+  async checkFirms() {
+    const proxy = import.meta.env.VITE_FIRE_PROXY_URL;
+    if (!proxy) return;
+    const bbox = '-66.5,-36.5,-44.9,-18.4';
+    const response = await fetch(proxy + '?bbox=' + encodeURIComponent(bbox), { cache: 'no-store', signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new Error('NASA FIRMS HTTP ' + response.status);
+    const csv = await response.text();
+    const lines = csv.trim().split(/\\r?\\n/);
+    if (lines.length < 2) return;
+    const headers = lines[0].split(',').map(x => x.trim());
+    const index = name => headers.indexOf(name);
+    const get = (cols, name) => cols[index(name)] ?? '';
+    for (const line of lines.slice(1)) {
+      const cols = line.split(',');
+      const lat = Number(get(cols, 'latitude')), lon = Number(get(cols, 'longitude'));
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || distanceKm(lon, lat) > 1000) continue;
+      const confidence = String(get(cols, 'confidence')).toLowerCase();
+      if (!['nominal', 'high', 'n', 'h'].includes(confidence)) continue;
+      const date = get(cols, 'acq_date'), time = get(cols, 'acq_time');
+      const cell = Math.round(lat * 10) + ':' + Math.round(lon * 10);
+      await this.notify({
+        key: 'firms:' + date + ':' + cell, channelId: 'desastres-live',
+        title: '🔥 NASA FIRMS · Detección térmica',
+        body: 'Confianza ' + confidence + ' · ' + date + ' ' + time + ' UTC · ' + lat.toFixed(2) + ', ' + lon.toFixed(2) + '. No equivale por sí sola a un incendio confirmado.',
+        lat, lon, metadata: { kind: 'thermal-hotspot', confidence, source: 'NASA FIRMS' }
       });
     }
   }
@@ -158,7 +188,7 @@ export class DisasterWatcher {
         key: 'noaa:' + id, channelId: 'desastres-live',
         title: '🌀 NOAA · ' + name,
         body: 'Sistema tropical activo. Consultá el parte oficial del NHC para trayectoria e intensidad.',
-        lat: Number.isFinite(lat) ? lat : 0, lon: Number.isFinite(lon) ? lon : 0,
+        lat: Number.isFinite(lat) ? lat : null, lon: Number.isFinite(lon) ? lon : null,
         metadata: { kind: 'tropical-storm', eventId: String(id), source: 'NOAA NHC' }
       });
     }
