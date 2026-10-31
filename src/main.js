@@ -3,6 +3,8 @@ import { CameraLayer } from './layers/CameraLayer.js';
 import { SatelliteLayer } from './layers/SatelliteLayer.js';
 import { FlightLayer } from './layers/FlightLayer.js';
 import { ShipLayer } from './layers/ShipLayer.js';
+import { EarthquakeLayer } from './layers/EarthquakeLayer.js';
+import { WeatherLayer } from './layers/WeatherLayer.js';
 
 const $ = (id) => document.getElementById(id);
 const hint = $('hint');
@@ -45,6 +47,8 @@ const haarp = viewer.entities.add({
 
 let flightsVisible = false;
 let shipsVisible = false;
+let earthquakesVisible = false;
+let weatherVisible = false;
 const flightLayer = new FlightLayer(viewer, state => {
   const el = $('flights-status');
   if (el) el.textContent = state.loading ? 'Consultando ADS-B…' : state.error ? state.error : state.count + ' aeronaves · ' + (state.coverage || 'ADS-B');
@@ -52,6 +56,14 @@ const flightLayer = new FlightLayer(viewer, state => {
 const shipLayer = new ShipLayer(viewer, state => {
   const el = $('ships-status');
   if (el) el.textContent = state.loading ? 'Conectando AIS…' : state.error ? state.error : state.count + ' buques · ' + (state.coverage || 'AIS');
+});
+const earthquakeLayer = new EarthquakeLayer(viewer, state => {
+  const el = $('earthquakes-status');
+  if (el) el.textContent = state.loading ? 'Consultando USGS…' : state.error ? state.error : state.count + ' sismos · últimas 24 h';
+});
+const weatherLayer = new WeatherLayer(viewer, state => {
+  const el = $('weather-status');
+  if (el) el.textContent = state.loading ? 'Consultando Open-Meteo…' : state.error ? state.error : state.temperature + ' °C · ' + (state.summary || 'clima actual');
 });
 let issEntity = null;
 let starlinkVisible = false;
@@ -152,8 +164,16 @@ document.querySelectorAll('[data-layer]').forEach(button => {
       shipsVisible = !shipsVisible;
       shipLayer.setVisible(shipsVisible);
       hint.textContent = shipsVisible ? 'Buques AIS en directo para la región visible. Requiere el proxy seguro de GOD’S EYE configurado en Cloudflare.' : 'Capa de tráfico marítimo oculta.';
+    } else if (layer === 'earthquakes') {
+      earthquakesVisible = !earthquakesVisible;
+      earthquakeLayer.setVisible(earthquakesVisible);
+      hint.textContent = earthquakesVisible ? 'Sismos mundiales registrados por USGS durante las últimas 24 horas.' : 'Capa de terremotos oculta.';
+    } else if (layer === 'weather') {
+      weatherVisible = !weatherVisible;
+      weatherLayer.setVisible(weatherVisible);
+      hint.textContent = weatherVisible ? 'Clima actual en el punto central del globo. Mové el mapa para consultar otra ubicación.' : 'Capa meteorológica oculta.';
     }
-    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : layer === 'flights' ? flightsVisible : layer === 'ships' ? shipsVisible : false;
+    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : layer === 'flights' ? flightsVisible : layer === 'ships' ? shipsVisible : layer === 'earthquakes' ? earthquakesVisible : layer === 'weather' ? weatherVisible : false;
     button.classList.toggle('active', active);
     button.querySelector('em').textContent = active ? 'ON' : 'OFF';
   });
@@ -165,9 +185,14 @@ setInterval(loadISS, 30 * 60 * 1000);
 setInterval(() => { if (camerasVisible) cameraLayer.refresh(); }, 60 * 1000);
 let flightRefreshTimer = null;
 viewer.camera.changed.addEventListener(() => {
-  if (!flightsVisible) return;
-  if (flightRefreshTimer) clearTimeout(flightRefreshTimer);
-  flightRefreshTimer = setTimeout(() => flightLayer.refresh(), 1800);
+  if (flightsVisible) {
+    if (flightRefreshTimer) clearTimeout(flightRefreshTimer);
+    flightRefreshTimer = setTimeout(() => flightLayer.refresh(), 1800);
+  }
+  if (weatherVisible) {
+    if (window.weatherRefreshTimer) clearTimeout(window.weatherRefreshTimer);
+    window.weatherRefreshTimer = setTimeout(() => weatherLayer.refresh(), 1800);
+  }
 });
 let cameraRefreshTimer = null;
 viewer.camera.changed.addEventListener(() => {
@@ -175,4 +200,4 @@ viewer.camera.changed.addEventListener(() => {
   if (cameraRefreshTimer) clearTimeout(cameraRefreshTimer);
   cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 1500);
 });
-window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); });
+window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); earthquakeLayer.destroy(); weatherLayer.destroy(); });
