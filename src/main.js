@@ -209,6 +209,6 @@ let cameraRefreshTimer = null;
 viewer.camera.changed.addEventListener(() => {
   if (!camerasVisible) return;
   if (cameraRefreshTimer) clearTimeout(cameraRefreshTimer);
-  cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 1500);
+  cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 5000);
 });
 window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); earthquakeLayer.destroy(); weatherLayer.destroy(); fireLayer.destroy(); });
