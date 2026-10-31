@@ -12,3 +12,6 @@
 .camera-media img,.camera-media video{display:block;width:100%;max-height:65vh;object-fit:contain}
 .camera-media p{padding:18px;color:#9bb2c9;font-size:12px;text-align:center}
 .camera-card>a{display:inline-block;margin-top:12px;color:#62cfff;font-size:12px;text-decoration:none}
+
+.panel{max-height:calc(100vh - 150px);overflow-y:auto;overscroll-behavior:contain}.panel::-webkit-scrollbar{width:3px}.panel::-webkit-scrollbar-thumb{background:#29465e;border-radius:4px}
+@media(max-width:480px){.panel{max-height:calc(100vh - 140px)}}
