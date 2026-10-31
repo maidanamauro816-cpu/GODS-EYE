@@ -126,6 +126,8 @@ body.mobile-shell #right-context-rail {
 }
 
 body.mobile-shell[data-mobile-sheet='layers'] #left-panel-stack,
+body.mobile-shell[data-mobile-sheet='flights'] #left-panel-stack,
+body.mobile-shell[data-mobile-sheet='satellites'] #left-panel-stack,
 body.mobile-shell[data-mobile-sheet='cameras'] #right-context-rail,
 body.mobile-shell[data-mobile-sheet='context'] #right-context-rail,
 body.mobile-shell[data-mobile-sheet='more'] #right-context-rail {
@@ -165,6 +167,8 @@ body.mobile-shell #right-context-rail > #recent-imagery-panel {
 /* Rail-scoped ids so a rail's own hiding rules (for example the Tactical HUD
    hiding collapsed siblings) never take a panel out of an open sheet. */
 body.mobile-shell[data-mobile-sheet='layers'] #left-panel-stack > #data-panel,
+body.mobile-shell[data-mobile-sheet='flights'] #left-panel-stack > #data-panel,
+body.mobile-shell[data-mobile-sheet='satellites'] #left-panel-stack > #data-panel,
 body.mobile-shell[data-mobile-sheet='layers'] #left-panel-stack > #scene-panel,
 body.mobile-shell[data-mobile-sheet='cameras']
   #right-context-rail
