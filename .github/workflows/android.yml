@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/android-release]
   workflow_dispatch:
 
 permissions:
@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   build:
-    name: Build GOD'S EYE debug APK
+    name: Build EL OJO DE DIOS debug APK
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
@@ -31,11 +31,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Prepare app icon
+        run: node scripts/prepare-icon.mjs
+
       - name: Build web assets
         run: npm run build
 
       - name: Generate Android project
         run: npx cap add android
+
+      - name: Generate native app icons
+        run: npx capacitor-assets generate --android
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -49,7 +55,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: gods-eye-debug-apk
+          name: el-ojo-de-dios-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
