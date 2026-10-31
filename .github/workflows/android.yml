@@ -33,9 +33,12 @@ jobs:
           java-version: '17'
 
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund
+        run: npm install --no-audit --no-fund
         env:
           PUPPETEER_SKIP_DOWNLOAD: '1'
+
+      - name: Link repository package for Node self-import tests
+        run: ln -s "$GITHUB_WORKSPACE" node_modules/gods-eye-view
 
       - name: Prepare app and web icons
         run: |
