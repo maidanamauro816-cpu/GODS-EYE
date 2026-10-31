@@ -62,6 +62,9 @@ const pkg = JSON.parse(await readFile(pkgPath, 'utf8'));
 pkg.name = 'gods-eye-view';
 pkg.private = true;
 pkg.scripts = { ...pkg.scripts, 'cap:sync': 'cap sync android', 'android:assets': 'capacitor-assets generate --android' };
+// The sky adapter explicitly validates Cesium 1.138.0; do not silently
+// resolve a newer engine without re-running that contract validation.
+pkg.dependencies.cesium = '1.138.0';
 pkg.dependencies = {
   ...pkg.dependencies,
   vite: pkg.devDependencies.vite,
