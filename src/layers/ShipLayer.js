@@ -44,6 +44,10 @@ export class ShipLayer {
     if(Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180){
       this.vessels.set(mmsi,{mmsi,name,lat,lon,speed:Number.isFinite(Number(position?.Sog))?Number(position.Sog):previous?.speed,course:Number.isFinite(Number(position?.Cog))?Number(position.Cog):previous?.course,heading:Number.isFinite(Number(position?.TrueHeading))?Number(position.TrueHeading):previous?.heading});
       this.lastSeen.set(mmsi,Date.now());
+      if(this.vessels.size>50000){
+        const oldest=[...this.lastSeen.entries()].sort((a,b)=>a[1]-b[1]).slice(0,this.vessels.size-50000);
+        for(const [oldId] of oldest){this.lastSeen.delete(oldId);this.vessels.delete(oldId);}
+      }
     }else if(previous&&name!==previous.name)this.vessels.set(mmsi,{...previous,name});
     this.lastMessageAt=Date.now();
   }
@@ -94,7 +98,7 @@ export class ShipLayer {
     if(!visible){this.disconnect();for(const e of this.entities.values())e.show=false;return;}
     this.connect();
     if(this.renderTimer)clearInterval(this.renderTimer);
-    this.renderTimer=setInterval(()=>{this.pruneStale();this.render();},2000);
+    this.renderTimer=setInterval(()=>{this.pruneStale();this.render();},5000);
   }
   disconnect(clearTimer=true){
     if(this.retryTimer)clearTimeout(this.retryTimer);this.retryTimer=null;
