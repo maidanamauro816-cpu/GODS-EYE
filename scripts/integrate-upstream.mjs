@@ -36,7 +36,7 @@ export function defaultCacheDir() {
 async function patchCachePath(relativePath, importLine, from, to) {
   const file = path.join(root, relativePath);
   let source = await readFile(file, 'utf8');
-  if (!source.includes(importLine)) {
+  if (importLine && !source.includes(importLine)) {
     source = source.replace(
       "import path from 'node:path';",
       ["import path from 'node:path';", importLine].join(String.fromCharCode(10)),
@@ -55,12 +55,20 @@ const militaryCachePath = [
 ].join(String.fromCharCode(10));
 await patchCachePath('server/providers/overpass/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'overpass')", "path.join(defaultCacheDir(), 'overpass')");
 await patchCachePath('server/providers/military-installations/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", militaryCachePath, "path.join(defaultCacheDir(), 'military-installations')");
-await patchCachePath('server/providers/traffic.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'tomtom')", "path.join(defaultCacheDir(), 'tomtom')");
-await patchCachePath('server/providers/ghostMaps.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'ghostmaps')", "path.join(defaultCacheDir(), 'ghostmaps')");
-await patchCachePath('server/providers/firms.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache')", "defaultCacheDir()");
-await patchCachePath('server/providers/terrain.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'terrain-heights.json')", "path.join(defaultCacheDir(), 'terrain-heights.json')");
-await patchCachePath('server/providers/aircraft/enrichment.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'adsbdb.json')", "path.join(defaultCacheDir(), 'adsbdb.json')");
-await patchCachePath('server/providers/space/celestrak.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache')", 'defaultCacheDir()');
+const vercelCacheRoot = "process.env.GEV_CACHE_DIR || (process.env.VERCEL === '1' ? '/tmp/gev-cache' : path.join(process.cwd(), '.gev-cache'))";
+await patchCachePath('server/providers/traffic.js', null, "path.join(process.cwd(), '.gev-cache', 'tomtom')", `path.join(${vercelCacheRoot}, 'tomtom')`);
+await patchCachePath('server/providers/ghostMaps.js', null, "path.join(process.cwd(), '.gev-cache', 'ghostmaps')", `path.join(${vercelCacheRoot}, 'ghostmaps')`);
+await patchCachePath('server/providers/firms.js', null, "path.join(process.cwd(), '.gev-cache')", vercelCacheRoot);
+await patchCachePath('server/providers/terrain.js', null, "path.join(process.cwd(), '.gev-cache', 'terrain-heights.json')", `path.join(${vercelCacheRoot}, 'terrain-heights.json')`);
+await patchCachePath('server/providers/aircraft/enrichment.js', null, "path.join(process.cwd(), '.gev-cache', 'adsbdb.json')", `path.join(${vercelCacheRoot}, 'adsbdb.json')`);
+await patchCachePath('server/providers/space/celestrak.js', null, "path.join(process.cwd(), '.gev-cache')", vercelCacheRoot);
+await patchCachePath('server/providers/space/launch-library.js', null, launchLibraryCachePath, `path.join(${vercelCacheRoot}, 'launch-library-2-v2.3.json')`);
+
+
+
+
+
+
 const launchLibraryCachePath = [
   'path.join(',
   '    process.cwd(),',
@@ -68,7 +76,7 @@ const launchLibraryCachePath = [
   "    'launch-library-2-v2.3.json',",
   '  )',
 ].join(String.fromCharCode(10));
-await patchCachePath('server/providers/space/launch-library.js', "import { defaultCacheDir } from '../common/cache-dir.js';", launchLibraryCachePath, "path.join(defaultCacheDir(), 'launch-library-2-v2.3.json')");
+
 
 const iconPreparer = path.join(root, 'scripts', 'prepare-icon.mjs');
 if (!existsSync(iconPreparer)) throw new Error('Android icon preparation script was not preserved');
