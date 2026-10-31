@@ -1,10 +1,12 @@
-const PROXY=import.meta.env.VITE_TRAFFIC_PROXY_URL;
+const ADSB_PROXY=import.meta.env.VITE_ADSB_PROXY || "/api/adsb";
+const WORLD_PROXY=import.meta.env.VITE_TRAFFIC_PROXY_URL;
+const endpoint=value=>new URL(value,window.location.origin);
 const valid=p=>p&&Number.isFinite(+p.lat)&&Number.isFinite(+p.lon)&&Math.abs(+p.lat)<=90&&Math.abs(+p.lon)<=180;
 
 export async function fetchFlights({lat,lon,radiusNm=250,signal}={}) {
   const radius=Math.max(1,Math.min(250,Math.round(radiusNm)));
-  if(!PROXY)throw new Error("Falta configurar el proxy seguro de vuelos");
-  const url=new URL(PROXY);
+  if(!ADSB_PROXY)throw new Error("Falta configurar VITE_ADSB_PROXY");
+  const url=endpoint(ADSB_PROXY);
   url.searchParams.set("lat",String(lat));url.searchParams.set("lon",String(lon));url.searchParams.set("dist",String(radius));
   const response=await fetch(url,{signal,headers:{Accept:"application/json"},cache:"no-store"});
   if(!response.ok)throw new Error("ADSB.lol HTTP "+response.status);
@@ -24,8 +26,8 @@ export async function fetchFlights({lat,lon,radiusNm=250,signal}={}) {
 }
 
 export async function fetchWorldFlights({signal}={}){
-  if(!PROXY)throw new Error("Falta configurar el proxy seguro de vuelos");
-  const url=new URL(PROXY);url.searchParams.set("mode","global");
+  if(!WORLD_PROXY)throw new Error("Proxy global OpenSky no configurado (VITE_TRAFFIC_PROXY_URL)");
+  const url=endpoint(WORLD_PROXY);url.searchParams.set("mode","global");
   const response=await fetch(url,{signal,headers:{Accept:"application/json"},cache:"no-store"});
   if(!response.ok)throw new Error("OpenSky HTTP "+response.status);
   const data=await response.json(),states=Array.isArray(data.states)?data.states:[];
