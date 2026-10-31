@@ -38,7 +38,7 @@ pkg.dependencies = {
   '@capacitor/core': '^6.2.0',
   '@capacitor/local-notifications': '^6.1.0',
 };
-pkg.devDependencies = { ...pkg.devDependencies, '@capacitor/cli': '^6.2.0', '@capacitor/assets': '^3.0.5' };
+pkg.devDependencies = { ...pkg.devDependencies, '@capacitor/cli': '^6.2.0', '@capacitor/assets': '^3.0.5', typescript: '^5.7.3' };
 await writeFile(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
 
 const mainPath = path.join(root, 'src', 'main.js');
