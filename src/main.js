@@ -184,14 +184,15 @@ setInterval(updateISS, 2500);
 setInterval(loadISS, 30 * 60 * 1000);
 setInterval(() => { if (camerasVisible) cameraLayer.refresh(); }, 60 * 1000);
 let flightRefreshTimer = null;
+let weatherRefreshTimer = null;
 viewer.camera.changed.addEventListener(() => {
   if (flightsVisible) {
     if (flightRefreshTimer) clearTimeout(flightRefreshTimer);
     flightRefreshTimer = setTimeout(() => flightLayer.refresh(), 1800);
   }
   if (weatherVisible) {
-    if (window.weatherRefreshTimer) clearTimeout(window.weatherRefreshTimer);
-    window.weatherRefreshTimer = setTimeout(() => weatherLayer.refresh(), 1800);
+    if (weatherRefreshTimer) clearTimeout(weatherRefreshTimer);
+    weatherRefreshTimer = setTimeout(() => weatherLayer.refresh(), 1800);
   }
 });
 let cameraRefreshTimer = null;
