@@ -25,16 +25,25 @@ export const MOBILE_SHEET_ATTR = 'data-mobile-sheet';
 export const MOBILE_SHEET_PANELS = Object.freeze({
   layers: Object.freeze(['data-panel']),
   cameras: Object.freeze(['cctv-panel', 'street-level-panel']),
-  context: Object.freeze(['global-context-panel']),
-  search: Object.freeze(['location-bar']),
-  more: Object.freeze(['control-panel', 'pp-toggles']),
+  flights: Object.freeze(['data-panel']),
+  satellites: Object.freeze(['data-panel']),
+  more: Object.freeze([
+    'location-bar',
+    'control-panel',
+    'global-context-panel',
+    'pp-toggles',
+  ]),
 });
 
 export const MOBILE_TABS = Object.freeze([
   Object.freeze({ sheet: 'layers', label: msg('Layers'), icon: 'layers' }),
   Object.freeze({ sheet: 'cameras', label: msg('Cameras'), icon: 'videocam' }),
-  Object.freeze({ sheet: 'context', label: msg('Context'), icon: 'radar' }),
-  Object.freeze({ sheet: 'search', label: msg('Search'), icon: 'search' }),
+  Object.freeze({ sheet: 'flights', label: msg('Flights'), icon: 'flight' }),
+  Object.freeze({
+    sheet: 'satellites',
+    label: msg('Satellites'),
+    icon: 'satellite_alt',
+  }),
   Object.freeze({ sheet: 'more', label: msg('More'), icon: 'more_horiz' }),
 ]);
 
@@ -245,7 +254,7 @@ export function initMobileShell({
 
   /** The first visible control of the sheet's first panel, for focus on open. */
   const sheetFocusTarget = (sheet) => {
-    if (sheet === 'search') return element('location-search');
+    if (sheet === 'more') return element('location-search');
     const panel = element(MOBILE_SHEET_PANELS[sheet][0]);
     const controls =
       panel?.querySelectorAll?.(
@@ -272,7 +281,7 @@ export function initMobileShell({
       borrowed = { before: panelStates(), applied: panelStates() };
       returnFocus = documentRef.activeElement ?? null;
     } else {
-      if (previous === 'search') element('location-search')?.blur?.();
+      if (previous === 'more') element('location-search')?.blur?.();
       restoreBorrowed();
     }
     present(sheet);
