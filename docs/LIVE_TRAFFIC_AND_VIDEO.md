@@ -32,3 +32,8 @@ Fuente técnica: https://openeye.cam/docs. WHEP puede tener facturación por seg
 - seen_pos ADS-B y los tiempos AIS ayudan a reconocer datos atrasados.
 - Las posiciones pueden quedar obsoletas entre actualizaciones o por falta de receptores.
 - Si un servicio falla, su capa informa el error sin apagar el resto del globo.
+
+## Meteorología y sismos
+
+- Meteorología: Open-Meteo entrega condiciones actuales para el punto central del globo. Se actualiza cada 10 minutos y al cambiar de región; no representa un mapa mundial de radar meteorológico.
+- Terremotos: feed GeoJSON mundial de USGS de las últimas 24 horas, refrescado cada 5 minutos. Cada punto enlaza a su ficha oficial. La magnitud, profundidad y hora se muestran solo cuando están presentes en el registro.
