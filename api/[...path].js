@@ -1,15 +1,20 @@
 import { createServer } from 'vite';
-import path from 'node:path';
+import { localProviderPlugins } from '../server/providers/local.js';
+import { standaloneVoiceTools } from '../server/standalone/voiceTools.js';
 
 let serverPromise;
 
 async function getMiddlewareServer() {
   if (!serverPromise) {
-    const hosts = [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL, 'gods-eye-neon.vercel.app'].filter(Boolean);
-    process.env.GEV_ALLOWED_HOSTS = [...new Set(hosts)].join(',');
+    const tools = standaloneVoiceTools();
     serverPromise = createServer({
-      configFile: path.resolve(process.cwd(), 'server/standalone/vite.config.js'),
+      configFile: false,
+      root: process.cwd(),
       appType: 'custom',
+      plugins: localProviderPlugins({
+        realtime: { tools },
+        gemini: { tools },
+      }),
       server: {
         middlewareMode: true,
         hmr: false,
@@ -31,6 +36,7 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Vary', 'Origin');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
     res.end();
@@ -38,13 +44,24 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Vercel terminates TLS and supplies forwarding headers itself. The
-    // upstream local-server gate rejects those headers by design, so remove
-    // only the platform transport metadata after Vercel has routed the
-    // request. Origin/Host checks remain active in the provider middleware.
+    const allowedHosts = [
+      process.env.VERCEL_URL,
+      process.env.VERCEL_PROJECT_PRODUCTION_URL,
+      'gods-eye-neon.vercel.app',
+    ].filter(Boolean).map((value) => value.toLowerCase());
+    const host = String(req.headers.host || '').split(':')[0].toLowerCase();
+    if (process.env.VERCEL === '1' && !allowedHosts.includes(host)) {
+      res.statusCode = 403;
+      res.end('Blocked request host');
+      return;
+    }
+
     if (process.env.VERCEL === '1') {
       req.headers = { ...req.headers };
-      try { req.socket.encrypted = true; } catch { /* runtime socket may be immutable */ }
+      // Vercel terminates TLS before the function. Reflect the original scheme
+      // for the upstream exact-Origin comparison and remove only platform
+      // transport metadata; Origin/Host checks remain active in provider code.
+      try { req.socket.encrypted = true; } catch { /* immutable runtime socket */ }
       for (const name of [
         'forwarded', 'via', 'x-forwarded-for', 'x-forwarded-host',
         'x-forwarded-port', 'x-forwarded-proto', 'x-real-ip',
