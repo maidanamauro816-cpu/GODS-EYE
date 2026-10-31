@@ -48,11 +48,17 @@ jobs:
       - name: Prepare app icon
         run: node scripts/prepare-icon.mjs
 
+      - name: Run upstream setup policy checks
+        run: npm run doctor -- --json
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+          GEV_REQUIRE_ALLOCATION_GATE: '1'
+
       - name: Run upstream unit tests
         run: npm test
         env:
           PUPPETEER_SKIP_DOWNLOAD: '1'
-          GEV_REQUIRE_ALLOCATION_GATE: '0'
+          GEV_REQUIRE_ALLOCATION_GATE: '1'
 
       - name: Verify package boundaries
         run: npm run check:boundaries
