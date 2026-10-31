@@ -22,9 +22,9 @@ La app solicita una suscripción AIS mundial al Worker. El cliente mantiene los 
 
 ## Cámaras y vídeo
 
-OpenEye /v1/catalog/map aporta marcadores públicos y agrupados. Al seleccionar un marcador, la app consulta /v1/catalog/{id} para leer el tipo de medio, fecha de última imagen, atribución y destino correcto. Las cámaras live_video intentan abrir WebRTC/WHEP; si el proveedor no autoriza la inserción, requiere pago o no está disponible, se ofrece el visor oficial. Las imágenes fijas se muestran como imágenes, nunca se etiquetan como vídeo en directo.
+OpenEye /v1/catalog/map aporta marcadores públicos y agrupados. Al seleccionar un marcador, la app consulta /v1/catalog/{id} para leer el tipo de medio, fecha de última imagen, atribución y permisos de inserción. Solo se incrustan snapshots cuando redistribution.preview_embed=true y se respeta la atribución obligatoria. Las cámaras live_video abren el visor oficial; no se inicia WHEP automáticamente porque el endpoint puede facturar por segundo. Las imágenes fijas se muestran como imágenes, nunca se etiquetan como vídeo en directo.
 
-Fuente técnica: https://openeye.cam/docs. WHEP puede tener facturación por segundo; la app no debe saltarse controles de acceso ni pagos.
+Fuente técnica: https://openeye.cam/docs. WHEP tiene facturación por segundo; GOD'S EYE no lo invoca sin autorización de pago explícita. La app no debe saltarse controles de acceso ni pagos.
 
 ## Veracidad de las capas
 
