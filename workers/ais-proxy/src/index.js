@@ -4,7 +4,8 @@ export default {
     if(upgrade!=="websocket")return new Response("GOD'S EYE AIS proxy · WebSocket required",{status:426});
     if(!env.AISSTREAM_API_KEY)return new Response("AISSTREAM_API_KEY secret missing",{status:503});
     const origin=request.headers.get("Origin")||"";
-    if(env.ALLOWED_ORIGIN && origin!==env.ALLOWED_ORIGIN)return new Response("Origin not allowed",{status:403});
+    const allowed=(env.ALLOWED_ORIGINS||"https://localhost,capacitor://localhost,http://localhost:5173").split(",").map(x=>x.trim()).filter(Boolean);
+    if(!allowed.includes(origin))return new Response("Origin not allowed",{status:403});
     const pair=new WebSocketPair();
     const client=pair[0],server=pair[1];
     server.accept();
