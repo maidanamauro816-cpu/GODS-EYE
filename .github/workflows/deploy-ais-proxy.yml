@@ -37,6 +37,8 @@ jobs:
           AISSTREAM_API_KEY: ${{ secrets.AISSTREAM_API_KEY }}
           ALLOWED_ORIGINS: ${{ secrets.AIS_ALLOWED_ORIGINS }}
           FIRMS_MAP_KEY: ${{ secrets.FIRMS_MAP_KEY }}
+          OPENSKY_CLIENT_ID: ${{ secrets.OPENSKY_CLIENT_ID }}
+          OPENSKY_CLIENT_SECRET: ${{ secrets.OPENSKY_CLIENT_SECRET }}
         run: |
           printf '%s' "$AISSTREAM_API_KEY" | npx --yes wrangler@4 secret put AISSTREAM_API_KEY --config workers/ais-proxy/wrangler.toml
           if [ -n "$ALLOWED_ORIGINS" ]; then
@@ -44,4 +46,10 @@ jobs:
           fi
           if [ -n "$FIRMS_MAP_KEY" ]; then
             printf '%s' "$FIRMS_MAP_KEY" | npx --yes wrangler@4 secret put FIRMS_MAP_KEY --config workers/ais-proxy/wrangler.toml
+          fi
+          if [ -n "$OPENSKY_CLIENT_ID" ]; then
+            printf '%s' "$OPENSKY_CLIENT_ID" | npx --yes wrangler@4 secret put OPENSKY_CLIENT_ID --config workers/ais-proxy/wrangler.toml
+          fi
+          if [ -n "$OPENSKY_CLIENT_SECRET" ]; then
+            printf '%s' "$OPENSKY_CLIENT_SECRET" | npx --yes wrangler@4 secret put OPENSKY_CLIENT_SECRET --config workers/ais-proxy/wrangler.toml
           fi
