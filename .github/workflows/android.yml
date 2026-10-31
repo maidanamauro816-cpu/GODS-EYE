@@ -42,6 +42,15 @@ jobs:
       - name: Prepare app icon
         run: node scripts/prepare-icon.mjs
 
+      - name: Run upstream unit tests
+        run: npm test
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: '1'
+          GEV_REQUIRE_ALLOCATION_GATE: '0'
+
+      - name: Verify package boundaries
+        run: npm run check:boundaries
+
       - name: Build web assets
         run: npm run build
 
