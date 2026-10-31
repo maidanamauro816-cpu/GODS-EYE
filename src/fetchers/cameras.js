@@ -42,6 +42,7 @@ export async function loadPublicCameras({signal,bbox,zoom=4}={}) {
     const data=await response.json();
     const rows=data.items||data.clusters||[];
     for(const p of rows){
+      if(p.is_free!==true) continue;
       if(!Number.isFinite(+p.lat)||!Number.isFinite(+p.lon)) continue;
       const isCluster=!!p.count;
       cameras.push({
