@@ -57,6 +57,8 @@ jobs:
 
       - name: Build web assets
         run: npm run build
+        env:
+          VITE_GEV_API_ORIGIN: ${{ github.ref == 'refs/heads/main' && 'https://gods-eye-neon.vercel.app' || 'https://gods-eye-git-feature-gods-eye-view-i-24bbf9-maidanamauro816-cpu.vercel.app' }}
 
       - name: Verify Vercel provider middleware
         run: |
