@@ -233,14 +233,27 @@ test('every tab names a sheet and every sheet panel maps back to its sheet', () 
     MOBILE_TABS.map(({ sheet }) => sheet),
     Object.keys(MOBILE_SHEET_PANELS),
   );
-  for (const [sheet, panels] of Object.entries(MOBILE_SHEET_PANELS))
-    for (const panelId of panels) assert.equal(sheetForPanelId(panelId), sheet);
+  for (const [sheet, panels] of Object.entries(MOBILE_SHEET_PANELS)) {
+    assert.ok(panels.length > 0, `${sheet} has a panel`);
+    for (const panelId of panels)
+      assert.ok(
+        Object.hasOwn(MOBILE_SHEET_PANELS, sheetForPanelId(panelId)),
+        `${panelId} maps to a known sheet`,
+      );
+  }
+  // Flight and satellite shortcuts borrow the same layer panel; the canonical
+  // reverse mapping remains Layers for programmatic panel presentation.
+  assert.ok(MOBILE_SHEET_PANELS.flights.includes('data-panel'));
+  assert.ok(MOBILE_SHEET_PANELS.satellites.includes('data-panel'));
+  assert.equal(sheetForPanelId('data-panel'), 'layers');
   assert.equal(sheetForPanelId('unknown-panel'), null);
 });
 
 test('pressing a tab opens its sheet, pressing it again closes it', () => {
   assert.equal(nextSheet(null, 'layers'), 'layers');
   assert.equal(nextSheet('layers', 'layers'), null);
+  assert.equal(nextSheet('layers', 'flights'), 'flights');
+  assert.equal(nextSheet('flights', 'satellites'), 'satellites');
   assert.equal(nextSheet('layers', 'more'), 'more');
   assert.equal(nextSheet('layers', 'nonsense'), null);
   assert.equal(nextSheet(null, 'constructor'), null);
@@ -271,10 +284,10 @@ test('sheets borrow panels and put them back exactly as they were', () => {
   press('cameras');
   assert.equal(collapsed('cctv-panel'), false);
   assert.equal(collapsed('street-level-panel'), false);
-  press('search');
+  press('more');
   assert.equal(collapsed('cctv-panel'), true, 'Cameras put back on switch');
   assert.equal(collapsed('location-bar'), false);
-  press('search');
+  press('more');
   for (const id of PANEL_IDS)
     assert.equal(collapsed(id), !kept.includes(id), `${id} is back as it was`);
   // Nothing a sheet does is the user's choice, persisted or shared.
@@ -311,10 +324,10 @@ test('a panel the user changes inside a sheet stays as they left it', () => {
 
 test('focus moves into the sheet and returns to the tab on close', () => {
   const { document, press, search, tab } = fixture();
-  press('search');
+  press('more');
   assert.equal(document.activeElement, search);
-  press('search');
-  assert.equal(document.activeElement, tab('search'));
+  press('more');
+  assert.equal(document.activeElement, tab('more'));
 
   press('layers');
   const dataPanel = document.getElementById('data-panel');
@@ -400,7 +413,7 @@ test('layout settling after a sheet opens is part of opening', () => {
 
 test('the backdrop closes the open sheet', () => {
   const { document, shell, press } = fixture();
-  press('context');
+  press('more');
   document
     .getElementById('mobile-sheet-backdrop')
     .dispatchEvent(new Event('click'));
