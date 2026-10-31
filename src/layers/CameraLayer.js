@@ -7,10 +7,12 @@ export class CameraLayer {
     this.peer=null;
     window.addEventListener("camera-close",()=>this.stopVideo());
     this.viewer.selectedEntityChanged.addEventListener(entity=>{
-      if(!entity||!this.visible)return;
+      if(!entity){this.stopVideo();const modal=document.getElementById("camera-viewer");if(modal)modal.hidden=true;return;}
+      if(!this.visible)return;
       const id=String(entity.id||"").replace(/^camera-/,"");
       const camera=this.cameraData.get(id);
       if(camera)this.openCamera(camera);
+      else{this.stopVideo();const modal=document.getElementById("camera-viewer");if(modal)modal.hidden=true;}
     });
   }
   async refresh() {
