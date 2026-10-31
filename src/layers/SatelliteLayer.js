@@ -9,7 +9,7 @@ export class SatelliteLayer {
   async load() {
     this.onStatus({loading:true,count:this.satrecs.length});
     try {
-      const response=await fetch("https://celestrak.org/NORAD/elements/gp.php?GROUP=starlink&FORMAT=tle",{cache:"no-store"});
+      const response=await fetch("https://celestrak.org/NORAD/elements/gp.php?GROUP=active&FORMAT=tle",{cache:"no-store"});
       if(!response.ok)throw new Error("CelesTrak HTTP "+response.status);
       const lines=(await response.text()).trim().split(/\r?\n/);
       const parsed=[];
@@ -18,7 +18,7 @@ export class SatelliteLayer {
           try{parsed.push({name:lines[i].trim(),satrec:twoline2satrec(lines[i+1],lines[i+2])});i+=2;}catch{}
         }
       }
-      if(!parsed.length)throw new Error("CelesTrak no devolvió elementos orbitales Starlink");
+      if(!parsed.length)throw new Error("CelesTrak no devolvió elementos orbitales satélites activos");
       this.satrecs=parsed;
       this.updatePositions();
       this.onStatus({loading:false,count:this.satrecs.length,updatedAt:new Date().toISOString()});
