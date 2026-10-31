@@ -1,5 +1,6 @@
 import { twoline2satrec, propagate, gstime, eciToGeodetic, degreesLat, degreesLong } from 'satellite.js';
 import { CameraLayer } from './layers/CameraLayer.js';
+import { SatelliteLayer } from './layers/SatelliteLayer.js';
 
 const $ = (id) => document.getElementById(id);
 const hint = $('hint');
@@ -41,6 +42,11 @@ const haarp = viewer.entities.add({
 });
 
 let issEntity = null;
+let starlinkVisible = false;
+const starlinkLayer = new SatelliteLayer(viewer, (state) => {
+  const el = $('starlink-status');
+  if (el) el.textContent = state.loading ? 'Descargando TLE de CelesTrak…' : state.error ? state.error : state.count + ' objetos orbitales · CelesTrak';
+});
 let issVisible = true;
 let haarpVisible = true;
 let lastTle = null;
@@ -113,6 +119,9 @@ document.querySelectorAll('[data-layer]').forEach(button => {
     if (layer === 'iss') {
       issVisible = !issVisible;
       if (issEntity) issEntity.show = issVisible;
+    } else if (layer === 'starlink') {
+      starlinkVisible = !starlinkVisible;
+      await starlinkLayer.setVisible(starlinkVisible);
     } else if (layer === 'haarp') {
       haarpVisible = !haarpVisible;
       haarp.show = haarpVisible;
@@ -128,7 +137,7 @@ document.querySelectorAll('[data-layer]').forEach(button => {
         ? 'Vuelos: pendiente de conectar ADS-B.LOL con un proxy de consulta responsable.'
         : 'Tráfico marítimo: pendiente de proveedor AIS autorizado. No se muestran posiciones inventadas.';
     }
-    const active = layer === 'iss' ? issVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : false;
+    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : false;
     button.classList.toggle('active', active);
     button.querySelector('em').textContent = active ? 'ON' : 'OFF';
   });
@@ -137,5 +146,11 @@ document.querySelectorAll('[data-layer]').forEach(button => {
 loadISS().then(updateISS);
 setInterval(updateISS, 2500);
 setInterval(loadISS, 30 * 60 * 1000);
-setInterval(() => { if (camerasVisible) cameraLayer.refresh(); }, 5 * 60 * 1000);
-window.addEventListener('beforeunload', () => cameraLayer.destroy());
+setInterval(() => { if (camerasVisible) cameraLayer.refresh(); }, 60 * 1000);
+let cameraRefreshTimer = null;
+viewer.camera.changed.addEventListener(() => {
+  if (!camerasVisible) return;
+  if (cameraRefreshTimer) clearTimeout(cameraRefreshTimer);
+  cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 1500);
+});
+window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); });
