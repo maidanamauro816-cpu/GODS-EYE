@@ -20,6 +20,11 @@ for (const dir of ['src', 'server', 'build', 'config', 'public', 'docs', 'tools'
 for (const legacyFile of ['src/cameras.js', 'src/environment.js']) {
   await rm(path.join(root, legacyFile), { force: true });
 }
+// These endpoints belonged to the previous prototype. The upstream
+// provider middleware now owns flight, CCTV and environmental API routes.
+for (const legacyApi of ['api/adsb.js', 'api/cameras.js', 'api/environment.js']) {
+  await rm(path.join(root, legacyApi), { force: true });
+}
 await cp(path.join(upstream, 'scripts'), path.join(root, 'scripts'), { recursive: true, force: true });
 for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
   const saved = path.join(preservedDir, name);
