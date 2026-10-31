@@ -27,14 +27,12 @@ export const MOBILE_SHEET_PANELS = Object.freeze({
   cameras: Object.freeze(['cctv-panel', 'street-level-panel']),
   flights: Object.freeze(['data-panel']),
   satellites: Object.freeze(['data-panel']),
-  more: Object.freeze([
-    'location-bar',
-    'control-panel',
+  context: Object.freeze([
     'global-context-panel',
     'weather-panel',
     'recent-imagery-panel',
-    'pp-toggles',
   ]),
+  more: Object.freeze(['location-bar', 'control-panel', 'pp-toggles']),
 });
 
 export const MOBILE_TABS = Object.freeze([
@@ -46,6 +44,7 @@ export const MOBILE_TABS = Object.freeze([
     label: msg('Satellites'),
     icon: 'satellite_alt',
   }),
+  Object.freeze({ sheet: 'context', label: msg('Context'), icon: 'radar' }),
   Object.freeze({ sheet: 'more', label: msg('More'), icon: 'more_horiz' }),
 ]);
 
