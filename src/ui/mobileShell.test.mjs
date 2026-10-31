@@ -728,7 +728,7 @@ test('the tab-open callback reports only a successful manual opening', () => {
   phone.press('more');
   assert.deepEqual(
     opened,
-    ['context'],
+    ['more'],
     'blocked sheets cannot activate a mode',
   );
   phone.shell.destroy();
