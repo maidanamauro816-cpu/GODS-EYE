@@ -47,7 +47,7 @@ if (existsSync(manifestPath)) {
   manifest.name = 'EL OJO DE DIOS';
   manifest.short_name = 'OJO DE DIOS';
   manifest.description = 'Globo 3D e inteligencia geoespacial en tiempo real.';
-  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\\n');
+  await writeFile(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
 }
 const chromePath = path.join(root, 'src', 'ui', 'templates', 'scene-chrome.html');
 let chrome = await readFile(chromePath, 'utf8');
