@@ -1,4 +1,5 @@
 import { twoline2satrec, propagate, gstime, eciToGeodetic, degreesLat, degreesLong } from 'satellite.js';
+import { CameraLayer } from './layers/CameraLayer.js';
 
 const $ = (id) => document.getElementById(id);
 const hint = $('hint');
@@ -10,26 +11,16 @@ if (!window.Cesium) {
 }
 
 const viewer = new Cesium.Viewer('globe', {
-  animation: false,
-  timeline: false,
-  geocoder: false,
-  homeButton: false,
-  sceneModePicker: false,
-  baseLayerPicker: false,
-  navigationHelpButton: false,
-  fullscreenButton: false,
-  infoBox: true,
-  selectionIndicator: true,
-  shouldAnimate: true,
-  imageryProvider: false,
+  animation: false, timeline: false, geocoder: false, homeButton: false,
+  sceneModePicker: false, baseLayerPicker: false, navigationHelpButton: false,
+  fullscreenButton: false, infoBox: true, selectionIndicator: true,
+  shouldAnimate: true, imageryProvider: false,
   terrainProvider: new Cesium.EllipsoidTerrainProvider()
 });
-
 viewer.imageryLayers.removeAll();
 viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
   url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-  credit: '© OpenStreetMap contributors',
-  maximumLevel: 19
+  credit: '© OpenStreetMap contributors', maximumLevel: 19
 }));
 viewer.scene.globe.enableLighting = true;
 viewer.scene.globe.showGroundAtmosphere = true;
@@ -53,6 +44,20 @@ let issEntity = null;
 let issVisible = true;
 let haarpVisible = true;
 let lastTle = null;
+let camerasVisible = false;
+const cameraLayer = new CameraLayer(viewer, (state) => {
+  const cameraStatus = $('camera-status');
+  if (!cameraStatus) return;
+  if (state.loading) cameraStatus.textContent = 'Consultando fuentes públicas…';
+  else if (state.error) cameraStatus.textContent = 'Error: ' + state.error;
+  else {
+    const active = state.sources.filter((s) => s.status === 'online');
+    const failed = state.sources.filter((s) => s.status !== 'online');
+    cameraStatus.textContent = state.count + ' cámaras · ' + active.length + '/' + state.sources.length + ' fuentes activas';
+    const details = active.map((s) => s.name + ': ' + s.count).concat(failed.map((s) => s.name + ': no disponible'));
+    cameraStatus.title = details.join('\n');
+  }
+});
 
 async function loadISS() {
   try {
@@ -85,18 +90,13 @@ function updateISS() {
     const pos = Cesium.Cartesian3.fromDegrees(lon, lat, alt);
     if (!issEntity) {
       issEntity = viewer.entities.add({
-        name: 'ISS · Estación Espacial Internacional',
-        position: pos,
+        name: 'ISS · Estación Espacial Internacional', position: pos,
         point: { pixelSize: 10, color: Cesium.Color.LIME, outlineColor: Cesium.Color.WHITE, outlineWidth: 2 },
         label: { text: 'ISS', font: 'bold 13px sans-serif', fillColor: Cesium.Color.LIME, outlineColor: Cesium.Color.BLACK, outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, -18) },
         description: 'Posición estimada a partir de elementos orbitales TLE públicos de CelesTrak.'
       });
-    } else {
-      issEntity.position = pos;
-    }
-  } catch (e) {
-    console.warn('ISS position update failed', e);
-  }
+    } else issEntity.position = pos;
+  } catch (e) { console.warn('ISS position update failed', e); }
 }
 
 $('coords').textContent = 'VISTA GLOBAL · TIERRA 3D';
@@ -108,7 +108,7 @@ viewer.screenSpaceEventHandler.setInputAction((event) => {
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
 document.querySelectorAll('[data-layer]').forEach(button => {
-  button.addEventListener('click', () => {
+  button.addEventListener('click', async () => {
     const layer = button.dataset.layer;
     if (layer === 'iss') {
       issVisible = !issVisible;
@@ -116,12 +116,19 @@ document.querySelectorAll('[data-layer]').forEach(button => {
     } else if (layer === 'haarp') {
       haarpVisible = !haarpVisible;
       haarp.show = haarpVisible;
+    } else if (layer === 'cameras') {
+      camerasVisible = !camerasVisible;
+      cameraLayer.setVisible(camerasVisible);
+      if (camerasVisible && cameraLayer.entities.size === 0) await cameraLayer.refresh();
+      hint.textContent = camerasVisible
+        ? 'Cámaras públicas: tocá un marcador para ver la imagen disponible y abrir la fuente oficial.'
+        : 'Capa de cámaras públicas oculta.';
     } else {
       hint.textContent = layer === 'flights'
-        ? 'La capa de vuelos todavía no está conectada a un proveedor de datos. No se mostrarán aviones inventados.'
-        : 'La capa marítima requiere un proveedor AIS y su clave de acceso. No se mostrarán barcos inventados.';
+        ? 'Vuelos: pendiente de conectar ADS-B.LOL con un proxy de consulta responsable.'
+        : 'Tráfico marítimo: pendiente de proveedor AIS autorizado. No se muestran posiciones inventadas.';
     }
-    const active = layer === 'iss' ? issVisible : layer === 'haarp' ? haarpVisible : false;
+    const active = layer === 'iss' ? issVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : false;
     button.classList.toggle('active', active);
     button.querySelector('em').textContent = active ? 'ON' : 'OFF';
   });
@@ -130,3 +137,5 @@ document.querySelectorAll('[data-layer]').forEach(button => {
 loadISS().then(updateISS);
 setInterval(updateISS, 2500);
 setInterval(loadISS, 30 * 60 * 1000);
+setInterval(() => { if (camerasVisible) cameraLayer.refresh(); }, 5 * 60 * 1000);
+window.addEventListener('beforeunload', () => cameraLayer.destroy());
