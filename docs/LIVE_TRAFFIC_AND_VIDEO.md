@@ -18,7 +18,7 @@ AIS Stream ofrece posiciones AIS por WebSocket. La clave NO se incluye en la APK
 6. En Actions, ejecutar Deploy GOD'S EYE AIS proxy y luego Build Android APK. El despliegue necesita los secrets CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID y AISSTREAM_API_KEY; opcionalmente AIS_ALLOWED_ORIGINS.
 7. Ejecutar nuevamente el workflow Android.
 
-El Worker solo acepta un rectángulo por conexión y limita su área a 600 grados cuadrados. En vista global recorta la suscripción a una ventana regional para no abrir una suscripción mundial descontrolada. Al cambiar de región, la app reconecta. AIS es información transmitida por los buques y estaciones costeras/satelitales; no todos los barcos transmiten ni hay garantía de cobertura oceánica continua. La disponibilidad y los límites del servicio AIS Stream aplican.
+La app solicita una suscripción AIS mundial al Worker. El cliente mantiene los últimos mensajes recibidos, elimina posiciones sin actualización durante 30 minutos y dibuja los 1.800 buques más cercanos al centro del globo para cuidar el rendimiento Android. AIS es información transmitida por los buques y estaciones costeras/satelitales; no todos los barcos transmiten ni hay garantía de cobertura oceánica continua. AIS Stream limita a tres conexiones por cuenta y por IP; no abrir conexiones duplicadas innecesarias. La disponibilidad y los límites del servicio AIS Stream aplican.
 
 ## Cámaras y vídeo
 
