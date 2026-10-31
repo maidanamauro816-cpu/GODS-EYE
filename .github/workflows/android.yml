@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main]
+    branches: [main, feature/android-release]
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Set up Java
         uses: actions/setup-java@v4
@@ -31,11 +32,17 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Prepare app icon
+        run: node scripts/prepare-icon.mjs
+
       - name: Build web assets
         run: npm run build
 
       - name: Generate Android project
         run: npx cap add android
+
+      - name: Generate native app icons
+        run: npx capacitor-assets generate --android
 
       - name: Sync Capacitor
         run: npx cap sync android
