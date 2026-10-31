@@ -11,7 +11,7 @@ Los avisos se deduplican con identificadores persistidos en el dispositivo. En A
 ## Frecuencia y límites
 
 - En primer plano: consulta cada 60 segundos y al volver a abrir la app.
-- En segundo plano: el temporizador JavaScript no es fiable y se suspende cuando Android detiene el WebView. Este commit todavía no instala un Worker nativo periódico.
+- En segundo plano: se registra Background Runner con una tarea periódica de 15 minutos para USGS, NASA EONET y NOAA. NASA FIRMS permanece en la consulta de primer plano porque requiere la URL del proxy configurada en el build.
 - Android no garantiza un servicio de red permanente. El trabajo periódico administrado por el sistema tiene intervalos mínimos y puede retrasarse por Doze, ahorro de batería o restricciones del fabricante.
 - La burbuja superpuesta sobre otras aplicaciones no está incluida: necesita un servicio Android y permiso especial de superposición. No se solicita ese permiso silenciosamente.
 
