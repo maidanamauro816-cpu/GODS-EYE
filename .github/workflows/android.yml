@@ -28,6 +28,8 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Build web assets
+        env:
+          VITE_AIS_PROXY_URL: ${{ secrets.VITE_AIS_PROXY_URL }}
         run: npm run build
       - name: Generate Android project
         run: npx cap add android
