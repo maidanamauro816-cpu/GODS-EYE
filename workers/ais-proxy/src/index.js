@@ -15,6 +15,16 @@ export default {
     if(!origin)return new Response("Origin not allowed",{status:403});
     if(request.method==="OPTIONS")return new Response(null,{status:204,headers:corsHeaders(origin)});
 
+    if(url.pathname==="/fires"&&request.method==="GET"){
+      if(!env.FIRMS_MAP_KEY)return new Response("FIRMS_MAP_KEY secret missing",{status:503});
+      const bbox=(url.searchParams.get("bbox")||"").split(",").map(Number);
+      if(bbox.length!==4||!bbox.every(Number.isFinite)||bbox[0]<-180||bbox[2]>180||bbox[1]<-90||bbox[3]>90||bbox[0]>=bbox[2]||bbox[1]>=bbox[3]||(bbox[2]-bbox[0])*(bbox[3]-bbox[1])>1500)
+        return new Response("Invalid fire map bounds",{status:400,headers:corsHeaders(origin)});
+      const area=bbox.join(",");
+      const upstream=await fetch("https://firms.modaps.eosdis.nasa.gov/api/area/csv/"+encodeURIComponent(env.FIRMS_MAP_KEY)+"/VIIRS_NOAA20_NRT/"+area+"/1",{cf:{cacheTtl:0}});
+      return new Response(await upstream.text(),{status:upstream.status,headers:{...corsHeaders(origin),"Content-Type":"text/csv; charset=utf-8","Cache-Control":"no-store","X-Data-Source":"NASA FIRMS VIIRS NOAA-20"}});
+    }
+
     if(url.pathname==="/flights"&&request.method==="GET"){
       const lat=Number(url.searchParams.get("lat")),lon=Number(url.searchParams.get("lon")),dist=Number(url.searchParams.get("dist")||250);
       if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180||!Number.isFinite(dist)||dist<1||dist>250)
