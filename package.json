@@ -32,6 +32,7 @@
     "visualization"
   ],
   "scripts": {
+    "prebuild": "node scripts/generate-icons.mjs",
     "doctor": "node scripts/setup-doctor.mjs",
     "format": "node scripts/format.mjs --write",
     "format:check": "node scripts/format.mjs --check",
