@@ -33,6 +33,7 @@ function fixture(name, overrides = {}, preview = false) {
     admitSameSiteKeyless: () => false,
     path, process: { cwd: () => '/fixture', env: {} },
     defaultCacheDir: () => '/fixture/.cache',
+    defaultCacheDir: () => '/fixture/.cache',
     fsp: {
       readFile: async () => { throw new Error('cache absent'); },
       stat: async () => { throw new Error('cache absent'); },
