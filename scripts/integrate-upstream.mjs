@@ -51,16 +51,16 @@ const militaryCachePath = [
   '  process.cwd(),',
   "  '.gev-cache',",
   "  'military-installations',",
-  ')',
+  ');',
 ].join(String.fromCharCode(10));
 await patchCachePath('server/providers/overpass/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'overpass')", "path.join(defaultCacheDir(), 'overpass')");
-await patchCachePath('server/providers/military-installations/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", militaryCachePath, "path.join(defaultCacheDir(), 'military-installations')");
+await patchCachePath('server/providers/military-installations/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", militaryCachePath, "path.join(defaultCacheDir(), 'military-installations');");
 const launchLibraryCachePath = [
   'path.join(',
   '    process.cwd(),',
   "    '.gev-cache',",
   "    'launch-library-2-v2.3.json',",
-  '  )',
+  '  );',
 ].join(String.fromCharCode(10));
 const vercelCacheRoot = "process.env.GEV_CACHE_DIR || (process.env.VERCEL === '1' ? '/tmp/gev-cache' : path.join(process.cwd(), '.gev-cache'))";
 await patchCachePath('server/providers/traffic.js', null, "path.join(process.cwd(), '.gev-cache', 'tomtom')", `path.join(${vercelCacheRoot}, 'tomtom')`);
@@ -69,7 +69,7 @@ await patchCachePath('server/providers/firms.js', null, "path.join(process.cwd()
 await patchCachePath('server/providers/terrain.js', null, "path.join(process.cwd(), '.gev-cache', 'terrain-heights.json')", `path.join(${vercelCacheRoot}, 'terrain-heights.json')`);
 await patchCachePath('server/providers/aircraft/enrichment.js', null, "path.join(process.cwd(), '.gev-cache', 'adsbdb.json')", `path.join(${vercelCacheRoot}, 'adsbdb.json')`);
 await patchCachePath('server/providers/space/celestrak.js', null, "path.join(process.cwd(), '.gev-cache')", vercelCacheRoot);
-await patchCachePath('server/providers/space/launch-library.js', null, launchLibraryCachePath, `path.join(${vercelCacheRoot}, 'launch-library-2-v2.3.json')`);
+await patchCachePath('server/providers/space/launch-library.js', null, launchLibraryCachePath, `path.join(${vercelCacheRoot}, 'launch-library-2-v2.3.json');`);
 
 
 
