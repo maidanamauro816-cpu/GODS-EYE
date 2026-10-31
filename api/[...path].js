@@ -48,6 +48,7 @@ export default async function handler(req, res) {
       process.env.VERCEL_URL,
       process.env.VERCEL_PROJECT_PRODUCTION_URL,
       'gods-eye-neon.vercel.app',
+      'gods-eye-git-feature-gods-eye-view-i-24bbf9-maidanamauro816-cpu.vercel.app',
     ].filter(Boolean).map((value) => value.toLowerCase());
     const host = String(req.headers.host || '').split(':')[0].toLowerCase();
     if (process.env.VERCEL === '1' && !allowedHosts.includes(host)) {
