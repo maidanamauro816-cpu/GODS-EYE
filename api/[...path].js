@@ -15,11 +15,7 @@ async function getMiddlewareServer() {
         realtime: { tools },
         gemini: { tools },
       }),
-      server: {
-        middlewareMode: true,
-        hmr: false,
-        watch: null,
-      },
+      server: { middlewareMode: true, hmr: false, watch: null },
       optimizeDeps: { noDiscovery: true, include: [] },
     }).catch((error) => {
       serverPromise = undefined;
@@ -59,10 +55,16 @@ export default async function handler(req, res) {
 
     if (process.env.VERCEL === '1') {
       req.headers = { ...req.headers };
-      // Vercel terminates TLS before the function. Reflect the original scheme
-      // for the upstream exact-Origin comparison and remove only platform
-      // transport metadata; Origin/Host checks remain active in provider code.
-      try { Object.defineProperty(req.socket, 'encrypted', { value: true, configurable: true }); } catch { /* immutable runtime socket */ }
+      // Vercel terminates TLS before invoking Node. Normalize the socket
+      // scheme and strip only platform forwarding metadata before local gates.
+      try {
+        Object.defineProperty(req.socket, 'encrypted', {
+          value: true,
+          configurable: true,
+        });
+      } catch {
+        /* immutable runtime socket */
+      }
       for (const name of [
         'forwarded', 'via', 'x-forwarded-for', 'x-forwarded-host',
         'x-forwarded-port', 'x-forwarded-proto', 'x-real-ip',
@@ -72,15 +74,40 @@ export default async function handler(req, res) {
 
     const vite = await getMiddlewareServer();
     await new Promise((resolve, reject) => {
-      vite.middlewares(req, res, (error) => {
-        if (error) return reject(error);
-        if (!res.writableEnded) {
-          res.statusCode = 404;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(JSON.stringify({ error: 'provider_not_found' }));
-        }
+      let settled = false;
+      const cleanup = () => {
+        res.removeListener('finish', finish);
+        res.removeListener('close', finish);
+      };
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
         resolve();
-      });
+      };
+      const fail = (error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
+      // Provider middleware usually ends the response without calling next().
+      // Resolve on response completion as well as on Connect's next callback.
+      res.once('finish', finish);
+      res.once('close', finish);
+      try {
+        vite.middlewares(req, res, (error) => {
+          if (error) return fail(error);
+          if (!res.writableEnded) {
+            res.statusCode = 404;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ error: 'provider_not_found' }));
+          }
+          finish();
+        });
+      } catch (error) {
+        fail(error);
+      }
     });
   } catch (error) {
     console.error('[Gods Eye API adapter]', error?.stack || error);
