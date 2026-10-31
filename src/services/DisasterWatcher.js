@@ -62,9 +62,9 @@ export class DisasterWatcher {
         if (Number.isFinite(extra?.lat) && Number.isFinite(extra?.lon)) this.onNavigate(extra);
       }));
     }
-    this.listeners.push(await App.addListener('appStateChange', ({ isActive }) => {
+    try { this.listeners.push(await App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) this.checkAll();
-    }));
+    })); } catch (error) { console.warn('App state listener unavailable:', error); }
     document.addEventListener('visibilitychange', this.handleVisibility);
     await this.checkAll();
     this.timer = setInterval(() => {
