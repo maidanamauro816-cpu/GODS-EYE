@@ -65,6 +65,12 @@ export class CameraLayer {
     const image=document.getElementById("camera-image"),video=document.getElementById("camera-video"),message=document.getElementById("camera-message"),link=document.getElementById("camera-source");
     image.hidden=true;video.hidden=true;video.removeAttribute("src");message.textContent="Consultando disponibilidad de la cámara…";
     link.href=safeUrl(camera.source);link.hidden=!camera.source;
+    image.onerror=()=>{image.onerror=null;image.src="https://api.openeye.cam/v1/offline.webp";};
+    if(camera.provider!=="OpenEye · catálogo público"){
+      if(camera.image){image.src=safeUrl(camera.image);image.hidden=false;message.textContent="Imagen pública del proveedor · instantánea, no vídeo continuo";}
+      else message.textContent="El proveedor no ofrece una imagen insertable. Abrí su fuente oficial.";
+      return;
+    }
     try{
       const response=await fetch("https://api.openeye.cam/v1/catalog/"+encodeURIComponent(camera.id),{headers:{Accept:"application/json"},cache:"no-store"});
       if(!response.ok)throw new Error("Detalle HTTP "+response.status);
@@ -120,7 +126,7 @@ export class CameraLayer {
     const video=document.getElementById("camera-video");
     if(video){video.pause();video.srcObject=null;}
   }
-  setVisible(visible){this.visible=visible;for(const entity of this.entities.values())entity.show=visible;if(!visible)this.stopVideo();}
+  setVisible(visible){this.visible=visible;for(const entity of this.entities.values())entity.show=visible;if(!visible){this.stopVideo();const modal=document.getElementById("camera-viewer");if(modal)modal.hidden=true;}}
   destroy(){this.controller?.abort();this.stopVideo();for(const entity of this.entities.values())this.viewer.entities.remove(entity);this.entities.clear();this.cameraData.clear();}
 }
 function escapeHtml(value){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
