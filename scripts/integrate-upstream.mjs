@@ -58,6 +58,17 @@ await patchCachePath('server/providers/traffic.js', "import { defaultCacheDir } 
 await patchCachePath('server/providers/ghostMaps.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'ghostmaps')", "path.join(defaultCacheDir(), 'ghostmaps')");
 await patchCachePath('server/providers/firms.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache')", "defaultCacheDir()");
 await patchCachePath('server/providers/terrain.js', "import { defaultCacheDir } from './common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'terrain-heights.json')", "path.join(defaultCacheDir(), 'terrain-heights.json')");
+await patchCachePath('server/providers/aircraft/enrichment.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'adsbdb.json')", "path.join(defaultCacheDir(), 'adsbdb.json')");
+await patchCachePath('server/providers/space/celestrak.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache')", 'defaultCacheDir()');
+const launchLibraryCachePath = [
+  'path.join(',
+  '    process.cwd(),',
+  "    '.gev-cache',",
+  "    'launch-library-2-v2.3.json',",
+  '  )',
+].join(String.fromCharCode(10));
+await patchCachePath('server/providers/space/launch-library.js', "import { defaultCacheDir } from '../common/cache-dir.js';", launchLibraryCachePath, "path.join(defaultCacheDir(), 'launch-library-2-v2.3.json')");
+
 const iconPreparer = path.join(root, 'scripts', 'prepare-icon.mjs');
 if (!existsSync(iconPreparer)) throw new Error('Android icon preparation script was not preserved');
 for (const file of ['index.html', 'style.css', 'vite.config.js', 'DATA_SOURCES.md', 'LICENSE', 'README.md', 'SECURITY.md', 'THIRD_PARTY_NOTICES.md', 'package.json', 'package-lock.json', 'CHANGELOG.md', 'CONTRIBUTING.md', 'TESTING.md', '.env.example', '.gitignore', '.dockerignore', '.prettierignore', '.prettierrc.json', 'Dockerfile', 'compose.yaml']) {
