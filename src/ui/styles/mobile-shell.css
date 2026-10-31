@@ -36,7 +36,7 @@ body.mobile-shell #mobile-tab-bar {
   left: 0;
   z-index: 170;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   height: var(--mobile-tab-space);
   padding: 0 max(4px, env(safe-area-inset-right, 0px))
     var(--mobile-bottom-inset) max(4px, env(safe-area-inset-left, 0px));
@@ -179,19 +179,10 @@ body.mobile-shell[data-mobile-sheet='cameras']
 body.mobile-shell[data-mobile-sheet='context']
   #right-context-rail
   > #global-context-panel,
-body.mobile-shell[data-mobile-sheet='more']
-  #right-context-rail
-  > #global-context-panel,
 body.mobile-shell[data-mobile-sheet='context']
   #right-context-rail
   > #weather-panel:not([hidden]),
 body.mobile-shell[data-mobile-sheet='context']
-  #right-context-rail
-  > #recent-imagery-panel:not([hidden]),
-body.mobile-shell[data-mobile-sheet='more']
-  #right-context-rail
-  > #weather-panel:not([hidden]),
-body.mobile-shell[data-mobile-sheet='more']
   #right-context-rail
   > #recent-imagery-panel:not([hidden]),
 body.mobile-shell[data-mobile-sheet='more'] #right-context-rail > #pp-toggles {
