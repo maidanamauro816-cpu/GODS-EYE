@@ -154,7 +154,17 @@ function updateISS() {
 }
 
 $('coords').textContent = 'VISTA GLOBAL · TIERRA 3D';
+// Keep entity selection and coordinate inspection in the same handler.
+ // Replacing Cesium's default LEFT_CLICK action without picking entities prevents
+ // camera markers from reaching selectedEntityChanged (and opening the camera viewer).
 viewer.screenSpaceEventHandler.setInputAction((event) => {
+  const picked = viewer.scene.pick(event.position);
+  const entity = Cesium.defined(picked) && picked.id && typeof picked.id === 'object' && 'id' in picked.id
+    ? picked.id
+    : undefined;
+  viewer.selectedEntity = entity;
+
+  if (entity) return;
   const cartesian = viewer.camera.pickEllipsoid(event.position, viewer.scene.globe.ellipsoid);
   if (!cartesian) return;
   const c = Cesium.Cartographic.fromCartesian(cartesian);
