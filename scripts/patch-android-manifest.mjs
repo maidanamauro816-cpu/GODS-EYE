@@ -32,7 +32,8 @@ if (additions.length) {
   if (manifestTagEnd < 0 || !xml.slice(0, manifestTagEnd).includes('<manifest')) {
     throw new Error('AndroidManifest.xml has no valid manifest root element');
   }
-  xml = xml.slice(0, manifestTagEnd + 1) + '\\n' + additions.join('\\n') + xml.slice(manifestTagEnd + 1);
+  const newline = String.fromCharCode(10);
+  xml = xml.slice(0, manifestTagEnd + 1) + newline + additions.join(newline) + xml.slice(manifestTagEnd + 1);
   await writeFile(manifestPath, xml);
 }
 console.log(`Android manifest permissions verified; added ${additions.length} declarations.`);
