@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: gods-eye-android-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     name: Build GOD'S EYE debug APK
