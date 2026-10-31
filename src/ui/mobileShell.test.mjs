@@ -249,6 +249,20 @@ test('every tab names a sheet and every sheet panel maps back to its sheet', () 
   assert.equal(sheetForPanelId('unknown-panel'), null);
 });
 
+test('flight and satellite shortcuts open the layer panel and notify the app', () => {
+  const opened = [];
+  const { shell, press, collapsed } = fixture({
+    onTabOpened: (sheet) => opened.push(sheet),
+  });
+  press('flights');
+  assert.equal(shell.getSheet(), 'flights');
+  assert.equal(collapsed('data-panel'), false);
+  press('satellites');
+  assert.equal(shell.getSheet(), 'satellites');
+  assert.deepEqual(opened, ['flights', 'satellites']);
+  shell.destroy();
+});
+
 test('pressing a tab opens its sheet, pressing it again closes it', () => {
   assert.equal(nextSheet(null, 'layers'), 'layers');
   assert.equal(nextSheet('layers', 'layers'), null);
