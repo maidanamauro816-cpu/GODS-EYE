@@ -2,7 +2,7 @@
 
 ## Vuelos — ADS-B.LOL
 
-La capa flights consulta ADSB.lol a través del endpoint /flights del Worker de Cloudflare (el proveedor no habilita CORS para uso directo desde el navegador). El Worker consulta https://api.adsb.lol/v2/point/{lat}/{lon}/{radius} con un radio máximo de 250 millas náuticas. Se refresca cada 30 segundos y al mover el globo. La cobertura depende de receptores ADS-B/MLAT activos: no equivale a radar primario ni garantiza todos los aviones del planeta. Para explorar otra zona, mové/acercá el globo.
+La capa combina dos fuentes: OpenSky Network mundial mediante /flights?mode=global (snapshot público cacheado 15 minutos; si se configuran OPENSKY_CLIENT_ID y OPENSKY_CLIENT_SECRET, OAuth2 y caché de 90 segundos) y ADSB.lol regional mediante /flights?lat=... (radio máximo 250 millas náuticas, actualización cada 30 segundos y al mover el globo). Se muestran hasta 2.500 aeronaves cercanas al centro del mapa para mantener fluido el Android. La cobertura depende de receptores ADS-B/MLAT activos: no equivale a radar primario ni garantiza todos los aviones del planeta. Para explorar otra zona, mové/acercá el globo.
 
 Fuente y licencia: https://www.adsb.lol/docs/open-data/api · ODbL 1.0. Respetar atribución y condiciones del proveedor.
 
