@@ -22,3 +22,28 @@ export async function fetchFlights({lat,lon,radiusNm=250,signal}={}) {
   }));
   return {aircraft,receivedAt:new Date().toISOString(),total:data.total??aircraft.length};
 }
+
+export async function fetchWorldFlights({signal}={}){
+  if(!PROXY)throw new Error("Falta configurar el proxy seguro de vuelos");
+  const url=new URL(PROXY);url.searchParams.set("mode","global");
+  const response=await fetch(url,{signal,headers:{Accept:"application/json"},cache:"no-store"});
+  if(!response.ok)throw new Error("OpenSky HTTP "+response.status);
+  const data=await response.json(),states=Array.isArray(data.states)?data.states:[];
+  const epoch=Number(data.time)||Math.floor(Date.now()/1000);
+  const aircraft=states.map(row=>{
+    if(!Array.isArray(row))return null;
+    const hex=String(row[0]||"").trim().toLowerCase(),lat=Number(row[6]),lon=Number(row[5]);
+    if(!hex||!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+    const altitudeM=Number(row[7]),speedMps=Number(row[9]),positionTime=Number(row[3]);
+    return {
+      id:hex,hex,callsign:String(row[1]||"").trim(),registration:"",type:"",
+      lat,lon,altitudeFt:Number.isFinite(altitudeM)?altitudeM/0.3048:null,
+      groundSpeedKt:Number.isFinite(speedMps)?speedMps*1.943844:null,
+      track:Number.isFinite(Number(row[10]))?Number(row[10]):null,
+      verticalRate:Number.isFinite(Number(row[11]))?Number(row[11])*196.8504:null,
+      squawk:row[14]||"",seenSeconds:Number.isFinite(positionTime)?Math.max(0,epoch-positionTime):null,
+      onGround:row[8]===true,source:"OpenSky Network"
+    };
+  }).filter(Boolean);
+  return {aircraft,receivedAt:new Date(epoch*1000).toISOString(),ageMs:Number(data._meta?.ageMs)||0,stale:!!data._meta?.stale,authenticated:!!data._meta?.authenticated,total:aircraft.length};
+}
