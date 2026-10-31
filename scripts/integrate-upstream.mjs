@@ -42,7 +42,8 @@ async function patchCachePath(relativePath, importLine, from, to) {
       ["import path from 'node:path';", importLine].join(String.fromCharCode(10)),
     );
   }
-  source = source.replace(from, to);
+  if (source.includes(from)) source = source.replace(from, to);
+  else if (!source.includes(to)) throw new Error(`Expected cache path was not found in ${relativePath}`);
   await writeFile(file, source);
 }
 const militaryCachePath = [
