@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - name: Install dependencies
         run: npm install
       - name: Validate JavaScript modules
@@ -64,9 +64,9 @@ jobs:
         run: |
           cat >> android/build.gradle <<'GRADLE'
 
-          // Keep Kotlin compilation aligned with JavaCompile in Capacitor plugins.
+          // Avoid resolving the Kotlin task class as a Gradle project property.
           subprojects {
-            tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+            tasks.matching { task -> task.name.startsWith('compile') && task.name.endsWith('Kotlin') }.configureEach {
               kotlinOptions.jvmTarget = '21'
             }
           }
