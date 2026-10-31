@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#050912" />
   <title>GOD'S EYE</title>
-  <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Widgets/widgets.css">
+  <link rel="stylesheet" href="https://cesium.com/downloads/cesiumjs/releases/1.121/Build/Cesium/Widgets/widgets.css">
   <link rel="stylesheet" href="/style.css">
   <script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/';</script>
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
@@ -20,6 +20,7 @@
     <aside class="panel">
       <div class="panel-title">CAPAS DEL MUNDO</div>
       <button data-layer="iss" class="layer active"><b>🛰</b><span>ISS / SATÉLITES<small id="sat-status">Preparando órbita…</small></span><em>ON</em></button>
+      <button data-layer="starlink" class="layer"><b>🛰</b><span>STARLINK · CONSTELACIÓN<small id="starlink-status">TLE orbitales CelesTrak</small></span><em>OFF</em></button>
       <button data-layer="haarp" class="layer active"><b>📡</b><span>HAARP · ALASKA<small>Instalación terrestre</small></span><em>ON</em></button>
       <button data-layer="cameras" class="layer"><b>📷</b><span>CÁMARAS PÚBLICAS<small id="camera-status">Fuentes mundiales disponibles</small></span><em>OFF</em></button>
       <button data-layer="flights" class="layer"><b>✈</b><span>VUELOS<small>ADS-B · integración pendiente</small></span><em>OFF</em></button>
