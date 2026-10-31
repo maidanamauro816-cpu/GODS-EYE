@@ -58,7 +58,9 @@ export function hasProxySignals(headers = {}) {
  * @returns {string|null}
  */
 function requestAuthority(hostHeader, protocol) {
-  const raw = String(hostHeader || '').trim().toLowerCase();
+  const raw = String(hostHeader || '')
+    .trim()
+    .toLowerCase();
   const scheme = String(protocol || '').toLowerCase();
   if (!raw || !['http:', 'https:'].includes(scheme) || /[\s/?#@]/.test(raw))
     return null;
@@ -107,7 +109,9 @@ export function admitSameSiteRequest({
   // (2) The browser tells us when a request is cross-site. `none` is a typed
   // URL / bookmark; `same-origin` is the app itself. Anything else (cross-site,
   // same-site but cross-origin) is refused.
-  const site = String(secFetchSite || '').trim().toLowerCase();
+  const site = String(secFetchSite || '')
+    .trim()
+    .toLowerCase();
   const nativeAppOrigin = [
     'capacitor://localhost',
     'https://localhost',
