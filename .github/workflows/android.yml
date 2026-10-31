@@ -60,6 +60,17 @@ jobs:
           PY
       - name: Sync Capacitor
         run: npx cap sync android
+      - name: Align Kotlin JVM target with Java 21
+        run: |
+          cat >> android/build.gradle <<'GRADLE'
+
+          // Keep Kotlin compilation aligned with JavaCompile in Capacitor plugins.
+          subprojects {
+            tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+              kotlinOptions.jvmTarget = '21'
+            }
+          }
+          GRADLE
       - name: Build APK
         working-directory: android
         run: |
