@@ -1,7 +1,7 @@
 export class ShipLayer {
   constructor(viewer,onStatus=()=>{}) {
     this.viewer=viewer;this.onStatus=onStatus;this.entities=new Map();
-    this.socket=null;this.visible=false;this.retry=0;this.retryTimer=null;this.refreshTimer=null;this.lastBox="";
+    this.socket=null;this.visible=false;this.retry=0;this.retryTimer=null;this.refreshTimer=null;this.lastBox="";this.lastSeen=new Map();
   }
   bounds() {
     const rect=this.viewer.camera.computeViewRectangle(this.viewer.scene.globe.ellipsoid);
@@ -31,15 +31,17 @@ export class ShipLayer {
     this.lastBox=key;
     this.onStatus({loading:true,count:this.entities.size,coverage:"AIS en vivo · región visible"});
     try{
-      this.socket=new WebSocket(endpoint);
-      this.socket.addEventListener("open",()=>{
+      const socket=new WebSocket(endpoint);
+      this.socket=socket;
+      socket.addEventListener("open",()=>{
         this.retry=0;
-        this.socket.send(JSON.stringify({bbox}));
+        socket.send(JSON.stringify({bbox}));
         this.onStatus({loading:false,count:this.entities.size,coverage:"Conectado · AIS en vivo"});
       });
-      this.socket.addEventListener("message",event=>this.handleMessage(event.data));
-      this.socket.addEventListener("error",()=>this.onStatus({loading:false,count:this.entities.size,error:"No se pudo conectar al proxy AIS"}));
-      this.socket.addEventListener("close",()=>{
+      socket.addEventListener("message",event=>this.handleMessage(event.data));
+      socket.addEventListener("error",()=>this.onStatus({loading:false,count:this.entities.size,error:"No se pudo conectar al proxy AIS"}));
+      socket.addEventListener("close",()=>{
+        if(this.socket!==socket)return;
         this.socket=null;
         if(this.visible)this.scheduleReconnect();
       });
@@ -74,6 +76,7 @@ export class ShipLayer {
       });
       this.entities.set(mmsi,entity);
     }else{entity.position=position;entity.name=name;entity.description=description;}
+    this.lastSeen.set(mmsi,Date.now());
     this.onStatus({loading:false,count:this.entities.size,coverage:"AIS en vivo · región visible",lastMessage:Date.now()});
   }
   scheduleReconnect(){
@@ -86,7 +89,13 @@ export class ShipLayer {
     if(!visible){this.disconnect();for(const e of this.entities.values())e.show=false;return;}
     for(const e of this.entities.values())e.show=true;
     this.connect();
-    this.refreshTimer=setInterval(()=>{if(this.visible&&this.bounds().join(",")!==this.lastBox)this.connect();},5000);
+    this.refreshTimer=setInterval(()=>{if(this.visible&&this.bounds().join(",")!==this.lastBox)this.connect();this.pruneStale();},5000);
+  }
+  pruneStale(){
+    const cutoff=Date.now()-30*60*1000;
+    for(const [mmsi,last] of this.lastSeen){
+      if(last<cutoff){const entity=this.entities.get(mmsi);if(entity)this.viewer.entities.remove(entity);this.entities.delete(mmsi);this.lastSeen.delete(mmsi);}
+    }
   }
   disconnect(clearTimer=true){
     if(this.retryTimer)clearTimeout(this.retryTimer);
@@ -95,6 +104,6 @@ export class ShipLayer {
     if(clearTimer)this.refreshTimer=null;
     if(this.socket){const s=this.socket;this.socket=null;try{s.close(1000,"map layer changed");}catch{}}
   }
-  destroy(){this.visible=false;this.disconnect();for(const e of this.entities.values())this.viewer.entities.remove(e);this.entities.clear();}
+  destroy(){this.visible=false;this.disconnect();for(const e of this.entities.values())this.viewer.entities.remove(e);this.entities.clear();this.lastSeen.clear();}
 }
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
