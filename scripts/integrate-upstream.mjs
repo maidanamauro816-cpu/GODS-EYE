@@ -1,12 +1,23 @@
-import { cp, copyFile, readFile, writeFile } from 'node:fs/promises';
+import { cp, copyFile, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const upstream = process.env.GEV_UPSTREAM_DIR || '/tmp/gods-eye-view';
+const preservedDir = '/tmp/gods-eye-preserved-scripts';
+await mkdir(preservedDir, { recursive: true });
+for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
+  const ownFile = path.join(root, 'scripts', name);
+  if (existsSync(ownFile)) await copyFile(ownFile, path.join(preservedDir, name));
+}
 for (const dir of ['src', 'server', 'build', 'config', 'public', 'docs', 'tools']) {
   await cp(path.join(upstream, dir), path.join(root, dir), { recursive: true, force: true });
+}
+await cp(path.join(upstream, 'scripts'), path.join(root, 'scripts'), { recursive: true, force: true });
+for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
+  const saved = path.join(preservedDir, name);
+  if (existsSync(saved)) await copyFile(saved, path.join(root, 'scripts', name));
 }
 const iconPreparer = path.join(root, 'scripts', 'prepare-icon.mjs');
 if (!existsSync(iconPreparer)) throw new Error('Android icon preparation script was not preserved');
