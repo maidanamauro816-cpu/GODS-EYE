@@ -38,3 +38,7 @@ Fuente técnica: https://openeye.cam/docs. WHEP puede tener facturación por seg
 
 - Meteorología: Open-Meteo entrega condiciones actuales para el punto central del globo. Se actualiza cada 10 minutos y al cambiar de región; no representa un mapa mundial de radar meteorológico.
 - Terremotos: feed GeoJSON mundial de USGS de las últimas 24 horas, refrescado cada 5 minutos. Cada punto enlaza a su ficha oficial. La magnitud, profundidad y hora se muestran solo cuando están presentes en el registro.
+
+## Incendios y focos térmicos
+
+NASA FIRMS VIIRS NOAA-20 NRT se consulta por el rectángulo visible a través del mismo Worker, cada 15 minutos. Para activarlo, solicitar el MAP_KEY gratuito en https://firms.modaps.eosdis.nasa.gov/api/map_key y guardarlo como secret FIRMS_MAP_KEY en GitHub Actions. También crear VITE_FIRE_PROXY_URL con la dirección HTTPS del Worker terminada en /fires. Ejecutar Deploy GOD'S EYE AIS proxy y luego Build Android APK. Las detecciones son anomalías térmicas satelitales con hora de adquisición y confianza; no equivalen por sí solas a una confirmación de incendio.
