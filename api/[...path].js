@@ -61,7 +61,7 @@ export default async function handler(req, res) {
       // Vercel terminates TLS before the function. Reflect the original scheme
       // for the upstream exact-Origin comparison and remove only platform
       // transport metadata; Origin/Host checks remain active in provider code.
-      try { req.socket.encrypted = true; } catch { /* immutable runtime socket */ }
+      try { Object.defineProperty(req.socket, 'encrypted', { value: true, configurable: true }); } catch { /* immutable runtime socket */ }
       for (const name of [
         'forwarded', 'via', 'x-forwarded-for', 'x-forwarded-host',
         'x-forwarded-port', 'x-forwarded-proto', 'x-real-ip',
