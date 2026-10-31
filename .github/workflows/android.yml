@@ -115,4 +115,4 @@ jobs:
             exit 0
           fi
           git commit -m "Integrate upstream providers and Android bridge [skip ci]"
-          git push origin HEAD:feature/gods-eye-view-integration
+          git push origin "HEAD:${GITHUB_REF_NAME}"
