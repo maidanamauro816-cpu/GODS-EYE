@@ -14,16 +14,21 @@
   <main id="app">
     <header class="topbar">
       <div><div class="brand">GOD'S <span>EYE</span></div><div class="subtitle">WORLD INTELLIGENCE GLOBE</div></div>
-      <div class="live"><i></i> GLOBO 3D</div>
+      <div class="live"><i></i> GLOBO 3D · LIVE</div>
     </header>
     <section id="globe" aria-label="Globo terráqueo 3D"></section>
     <aside class="panel">
       <div class="panel-title">CAPAS DEL MUNDO</div>
       <button data-layer="iss" class="layer active"><b>🛰</b><span>ISS / SATÉLITES<small id="sat-status">Preparando órbita…</small></span><em>ON</em></button>
       <button data-layer="haarp" class="layer active"><b>📡</b><span>HAARP · ALASKA<small>Instalación terrestre</small></span><em>ON</em></button>
-      <button data-layer="flights" class="layer"><b>✈</b><span>VUELOS<small>Fuente en preparación</small></span><em>OFF</em></button>
+      <button data-layer="flights" class="layer"><b>✈</b><span>VUELOS EN VIVO<small id="flight-status">Desactivados · activar para cargar</small></span><em>OFF</em></button>
       <button data-layer="ships" class="layer"><b>🚢</b><span>TRÁFICO MARÍTIMO<small>Requiere proveedor AIS</small></span><em>OFF</em></button>
-      <div class="hint" id="hint">Tocá el globo para explorar. Arrastrá para girar y pellizcá para acercar.</div>
+      <div id="flight-tools" class="flight-tools" hidden>
+        <div class="flight-tools-head"><strong>TRÁFICO DETECTADO</strong><button id="refresh-flights" type="button">↻ Actualizar</button></div>
+        <div id="flight-list" class="flight-list"><span class="muted">Activá vuelos para consultar ADS-B.</span></div>
+        <small class="coverage-note">Cobertura consultada alrededor del centro visible del globo (hasta 250 NM). Mové o acercá el mapa para explorar otras regiones.</small>
+      </div>
+      <div class="hint" id="hint">Arrastrá para girar el planeta. Pellizcá para acercar. Activá VUELOS para ver aeronaves ADS-B reales.</div>
     </aside>
     <footer><span id="coords">MUNDO · 3D</span><span>DATOS PÚBLICOS · USO INFORMATIVO</span></footer>
   </main>
