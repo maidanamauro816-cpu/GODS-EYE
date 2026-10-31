@@ -62,7 +62,7 @@ await writeFile(mainPath, main);
 
 const gatePath = path.join(root, 'src', 'localRequestGate.mjs');
 let gate = await readFile(gatePath, 'utf8');
-gate = gate.replace("  if (site !== '' && site !== 'same-origin' && site !== 'none') {", "  const nativeAppOrigin = String(origin || '') === 'capacitor://localhost';\n  if (site !== '' && site !== 'same-origin' && site !== 'none' && !nativeAppOrigin) {");
+gate = gate.replace("  if (site !== '' && site !== 'same-origin' && site !== 'none') {", "  const nativeAppOrigin = ['capacitor://localhost', 'https://localhost'].includes(String(origin || ''));\n  if (site !== '' && site !== 'same-origin' && site !== 'none' && !nativeAppOrigin) {");
 gate = gate.replace('  // (3) If Origin is present it must exactly equal the request\'s own authority.', '  // The installed Capacitor shell uses this fixed, app-owned origin.\n  if (nativeAppOrigin) return { ok: true };\n  // (3) If Origin is present it must exactly equal the request\'s own authority.');
 await writeFile(gatePath, gate);
 console.log('Integrated upstream source, Vercel runtime dependencies, and Android API bridge.');
