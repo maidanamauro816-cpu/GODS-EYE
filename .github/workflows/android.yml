@@ -5,6 +5,10 @@ on:
     branches: [main, feature/android-release, feature/gods-eye-view-integration]
   workflow_dispatch:
 
+concurrency:
+  group: gods-eye-android-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
