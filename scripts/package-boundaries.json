@@ -285,6 +285,7 @@
     "runtime": "node",
     "exports": ["./server/providers/military-installations"],
     "modules": [
+      "server/providers/common/cache-dir.js",
       "server/providers/common/http.js",
       "server/providers/common/query.js",
       "server/providers/common/rate-limit.js",
