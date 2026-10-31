@@ -1,4 +1,5 @@
 import path from 'node:path';
+import { defaultCacheDir } from '../common/cache-dir.js';
 import { createHash } from 'node:crypto';
 
 // ---------------------------------------------------------------------------
@@ -113,7 +114,7 @@ const OVERPASS_DISK_TTL_MS = 7 * 86_400_000;
 const OVERPASS_BOUNDARY_DISK_TTL_MS = 30 * 86_400_000;
 
 /** Disk-cache directory for Overpass responses. */
-const OVERPASS_DISK_DIR = path.join(process.cwd(), '.gev-cache', 'overpass');
+const OVERPASS_DISK_DIR = path.join(defaultCacheDir(), 'overpass');
 
 /** Per-upstream fetch timeout (ms). */
 const OVERPASS_TIMEOUT_MS = 22000;
