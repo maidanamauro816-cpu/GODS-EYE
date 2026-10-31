@@ -5,6 +5,7 @@ export class CameraLayer {
     this.viewer=viewer;this.onStatus=onStatus;this.entities=new Map();
     this.cameraData=new Map();this.sources=[];this.controller=null;this.visible=false;
     this.peer=null;
+    window.addEventListener("camera-close",()=>this.stopVideo());
     this.viewer.selectedEntityChanged.addEventListener(entity=>{
       if(!entity||!this.visible)return;
       const id=String(entity.id||"").replace(/^camera-/,"");
