@@ -53,7 +53,7 @@ let weatherVisible = false;
 let firesVisible = false;
 const flightLayer = new FlightLayer(viewer, state => {
   const el = $('flights-status');
-  if (el) el.textContent = state.loading ? 'Consultando ADS-B…' : state.error ? state.error : state.count + ' aeronaves · ' + (state.coverage || 'ADS-B');
+  if (el) el.textContent = state.loading ? 'Consultando ADS-B…' : state.error ? state.error : state.count + ' aeronaves · ' + (state.coverage || 'ADS-B') + (state.worldStale ? ' · datos globales atrasados' : '');
 });
 const shipLayer = new ShipLayer(viewer, state => {
   const el = $('ships-status');
