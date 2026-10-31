@@ -1,2 +1,37 @@
-:root{color-scheme:dark;font-family:Inter,Roboto,Arial,sans-serif;background:#050912;color:#eaf2ff}*{box-sizing:border-box}html,body,#app{margin:0;width:100%;height:100%;overflow:hidden;background:#050912}.topbar{position:absolute;z-index:5;top:0;left:0;right:0;height:72px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(3,8,17,.96),rgba(3,8,17,.25));pointer-events:none}.brand{font-size:21px;font-weight:900;letter-spacing:2px}.brand span{color:#4bc8ff}.subtitle{font-size:9px;letter-spacing:2px;color:#90a8c2;margin-top:3px}.live{font-size:10px;letter-spacing:1px;color:#b8d5eb;border:1px solid #29465e;padding:7px 10px;border-radius:20px;background:#071522cc}.live i{display:inline-block;width:7px;height:7px;background:#41e6a2;border-radius:50%;margin-right:6px;box-shadow:0 0 9px #41e6a2}#globe{position:absolute;inset:0}.panel{position:absolute;z-index:4;left:12px;top:90px;width:min(290px,78vw);max-height:calc(100dvh - 170px);overflow:auto;padding:12px;border:1px solid #25415b;border-radius:12px;background:rgba(5,14,27,.9);backdrop-filter:blur(10px);box-shadow:0 8px 30px #0008}.panel-title{font-size:10px;letter-spacing:2px;color:#78cfff;margin:2px 4px 10px}.layer{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:10px 8px;border:0;border-top:1px solid #1b3045;background:transparent;color:#eaf2ff}.layer b{font-size:19px;width:25px}.layer span{font-size:11px;font-weight:700;flex:1}.layer small{display:block;color:#829bb4;font-size:9px;font-weight:400;margin-top:3px}.layer em{font-style:normal;font-size:9px;color:#71859b}.layer.active em{color:#4de0a5}.hint{border-top:1px solid #1b3045;padding:10px 4px 2px;color:#8198b0;font-size:10px;line-height:1.4}.flight-tools{border-top:1px solid #1b3045;margin-top:5px;padding-top:10px}.flight-tools-head{display:flex;align-items:center;justify-content:space-between;color:#78cfff;font-size:9px;letter-spacing:1px;margin:0 2px 7px}.flight-tools-head button{background:#10283b;border:1px solid #28516a;color:#bdeeff;border-radius:6px;padding:5px 7px;font-size:10px}.flight-list{max-height:220px;overflow:auto}.flight-row{width:100%;display:flex;align-items:center;gap:8px;text-align:left;background:transparent;border:0;border-top:1px solid #172b3e;padding:8px 3px;color:#eaf2ff}.flight-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#45d7ff;box-shadow:0 0 8px #45d7ff}.flight-row-main{min-width:0;flex:1}.flight-row-main b{display:block;font-size:10px}.flight-row-main small,.muted{display:block;color:#829bb4;font-size:9px;margin-top:3px}.flight-arrow{font-size:18px;color:#70cfff}.coverage-note{display:block;color:#718ba5;font-size:8px;line-height:1.4;margin:8px 3px 2px}footer{position:absolute;z-index:4;bottom:0;left:0;right:0;padding:12px 15px;display:flex;justify-content:space-between;background:linear-gradient(0deg,#030811ed,transparent);font-size:8px;letter-spacing:1px;color:#8ba6c0;pointer-events:none}.cesium-viewer-bottom{bottom:2px!important;left:4px!important}.cesium-widget-credits{font-size:9px!important;opacity:.85!important}.cesium-viewer-toolbar{top:82px!important;right:12px!important}@media(max-width:480px){.panel{top:auto;bottom:54px;width:min(280px,82vw);max-height:55dvh}.topbar{height:64px}.cesium-viewer-toolbar{top:68px!important}.flight-list{max-height:145px}}
-.aircraft-detail{border-top:1px solid #28465e;margin-top:10px;padding-top:10px}.detail-heading,.detail-section{font-size:9px;letter-spacing:1.4px;color:#79d5ff;font-weight:800;margin:8px 2px}.detail-flight-title{font-size:16px;font-weight:900;color:#f2fbff;letter-spacing:1px;margin:5px 2px}.detail-subtitle{font-size:9px;color:#8daac2;margin:0 2px 10px}.detail-section{border-bottom:1px solid #1c3449;padding-bottom:5px;margin-top:12px}.detail-row{display:flex;justify-content:space-between;gap:8px;padding:5px 2px;border-bottom:1px solid #14283a;font-size:9px;line-height:1.3}.detail-row span{color:#819bb4;flex:1}.detail-row b{color:#e6f5ff;text-align:right;max-width:58%;overflow-wrap:anywhere}.detail-loading,.detail-disclaimer{font-size:8px;line-height:1.45;color:#7793ad;margin:9px 2px}.flight-list{max-height:165px}.aircraft-detail{max-height:310px;overflow:auto}@media(max-width:480px){.aircraft-detail{max-height:235px}.flight-list{max-height:110px}}
+/* Preserve component and responsive rule order in one stylesheet entry. */
+@import './src/ui/styles/foundation.css';
+@import './src/ui/styles/action-button.css';
+@import './src/ui/styles/form-field.css';
+@import './src/ui/styles/status-badge.css';
+@import './src/ui/styles/slider.css';
+@import './src/ui/styles/controls.css';
+@import './src/ui/styles/location.css';
+@import './src/ui/styles/status.css';
+@import './src/ui/styles/cockpit.css';
+@import './src/ui/styles/overlays.css';
+@import './src/ui/styles/layers.css';
+@import './src/ui/styles/radio.css';
+@import './src/ui/styles/cctv.css';
+@import './src/ui/styles/street-level.css';
+@import './src/ui/styles/scenes.css';
+@import './src/ui/styles/bhote-koshi.css';
+@import './src/ui/styles/recent-imagery.css';
+@import './src/ui/styles/recording.css';
+@import './src/ui/styles/embed.css';
+@import './src/ui/styles/responsive.css';
+@import './src/ui/styles/command-dock.css';
+@import './src/ui/styles/command-dock-compact.css';
+@import './src/ui/styles/command-dock-trays.css';
+@import './src/ui/styles/command-dock-sliding.css';
+@import './src/ui/styles/voice-cost.css';
+@import './src/ui/styles/voice-card.css';
+@import './src/ui/styles/first-run.css';
+@import './src/ui/styles/provider-settings.css';
+@import './src/ui/styles/locale-picker.css';
+
+@import './src/ui/styles/weather.css';
+@import './src/ui/styles/panel-surfaces.css';
+@import './src/ui/styles/segmented-control.css';
+@import './src/ui/styles/cjk.css';
+@import './src/ui/styles/mobile-shell.css';
+@import './src/ui/styles/cyber.css';
