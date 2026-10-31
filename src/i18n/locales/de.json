@@ -2210,7 +2210,6 @@
   "Press Enter to try again.": "Enter drücken, um es erneut zu versuchen.",
   "Detailed outline unavailable": "Detaillierter Umriss nicht verfügbar",
   "Layers": "Ebenen",
-  "Search": "Suche",
   "More": "Mehr",
   "Panels": "Bereiche",
   "Austin": "Austin",
@@ -2943,5 +2942,6 @@
   "Load scenes from an exported JSON file": "Szenen aus einer exportierten JSON-Datei laden",
   "Download the timing log of the last play": "Zeitprotokoll der letzten Wiedergabe herunterladen",
   "Edit anchors, data packs and shot details": "Anker, Datenpakete und Aufnahmedetails bearbeiten",
-  "Download this scene as JSON or an asset bundle": "Diese Szene als JSON oder Asset-Bundle herunterladen"
+  "Download this scene as JSON or an asset bundle": "Diese Szene als JSON oder Asset-Bundle herunterladen",
+  "Could not open the requested layer; try again": "Die angeforderte Ebene konnte nicht geöffnet werden. Bitte versuche es erneut."
 }
