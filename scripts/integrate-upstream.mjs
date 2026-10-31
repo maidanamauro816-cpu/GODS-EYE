@@ -55,6 +55,13 @@ const militaryCachePath = [
 ].join(String.fromCharCode(10));
 await patchCachePath('server/providers/overpass/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", "path.join(process.cwd(), '.gev-cache', 'overpass')", "path.join(defaultCacheDir(), 'overpass')");
 await patchCachePath('server/providers/military-installations/constants.js', "import { defaultCacheDir } from '../common/cache-dir.js';", militaryCachePath, "path.join(defaultCacheDir(), 'military-installations')");
+const launchLibraryCachePath = [
+  'path.join(',
+  '    process.cwd(),',
+  "    '.gev-cache',",
+  "    'launch-library-2-v2.3.json',",
+  '  )',
+].join(String.fromCharCode(10));
 const vercelCacheRoot = "process.env.GEV_CACHE_DIR || (process.env.VERCEL === '1' ? '/tmp/gev-cache' : path.join(process.cwd(), '.gev-cache'))";
 await patchCachePath('server/providers/traffic.js', null, "path.join(process.cwd(), '.gev-cache', 'tomtom')", `path.join(${vercelCacheRoot}, 'tomtom')`);
 await patchCachePath('server/providers/ghostMaps.js', null, "path.join(process.cwd(), '.gev-cache', 'ghostmaps')", `path.join(${vercelCacheRoot}, 'ghostmaps')`);
@@ -69,13 +76,6 @@ await patchCachePath('server/providers/space/launch-library.js', null, launchLib
 
 
 
-const launchLibraryCachePath = [
-  'path.join(',
-  '    process.cwd(),',
-  "    '.gev-cache',",
-  "    'launch-library-2-v2.3.json',",
-  '  )',
-].join(String.fromCharCode(10));
 
 
 const iconPreparer = path.join(root, 'scripts', 'prepare-icon.mjs');
