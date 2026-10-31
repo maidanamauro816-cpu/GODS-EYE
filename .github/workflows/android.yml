@@ -33,7 +33,7 @@ jobs:
           java-version: '17'
 
       - name: Install dependencies
-        run: npm install --no-audit --no-fund
+        run: npm ci --no-audit --no-fund
         env:
           PUPPETEER_SKIP_DOWNLOAD: '1'
 
@@ -66,6 +66,9 @@ jobs:
 
       - name: Generate Android project
         run: npx cap add android
+
+      - name: Configure Android runtime permissions
+        run: node scripts/patch-android-manifest.mjs
 
       - name: Generate native app icons
         run: npx capacitor-assets generate --android
