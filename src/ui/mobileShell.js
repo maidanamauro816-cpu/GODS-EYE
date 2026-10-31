@@ -370,13 +370,11 @@ export function initMobileShell({
   // ordinary vertical scrolling inside the borrowed panels.
   const sheetRoot = (target, sheet) => {
     const roots =
-      sheet === 'layers'
+      ['layers', 'flights', 'satellites'].includes(sheet)
         ? [element('left-panel-stack')]
-        : sheet === 'search'
-          ? [dock]
-          : sheet === 'more'
-            ? [element('right-context-rail'), dock]
-            : [element('right-context-rail')];
+        : sheet === 'more'
+          ? [element('right-context-rail'), dock]
+          : [element('right-context-rail')];
     return roots.find((root) => root?.contains(target));
   };
   const scrolled = (target, root) => {
