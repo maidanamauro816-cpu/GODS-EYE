@@ -8,7 +8,7 @@ export async function fetchFlights({lat,lon,radiusNm=250,signal}={}) {
   if(!response.ok)throw new Error("ADSB.lol HTTP "+response.status);
   const data=await response.json();
   const aircraft=(data.ac||[]).filter(valid).map(p=>({
-    id:String(p.hex||p.icao||p.flight||Math.random()),
+    id:String(p.hex||p.icao||((p.flight||"aircraft").trim()+"-"+p.lat+"-"+p.lon)),
     hex:p.hex||"",callsign:(p.flight||"").trim(),registration:p.r||"",
     type:p.t||"",lat:+p.lat,lon:+p.lon,
     altitudeFt:typeof p.alt_baro==="number"?p.alt_baro:null,
