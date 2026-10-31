@@ -9,11 +9,12 @@
   <link rel="stylesheet" href="/style.css">
   <script>window.CESIUM_BASE_URL='https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/';</script>
   <script src="https://cesium.com/downloads/cesiumjs/releases/1.123/Build/Cesium/Cesium.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js"></script>
 </head>
 <body>
   <main id="app">
     <header class="topbar">
-      <div><div class="brand">GOD'S <span>EYE</span></div><div class="subtitle">WORLD INTELLIGENCE GLOBE</div></div>
+      <div><div class="brand">EL OJO <span>DE DIOS</span></div><div class="subtitle">SISTEMA DE OBSERVACIÓN GLOBAL</div></div>
       <div class="live"><i></i> GLOBO 3D · LIVE</div>
     </header>
     <section id="globe" aria-label="Globo terráqueo 3D"></section>
@@ -22,6 +23,7 @@
       <button data-layer="iss" class="layer active"><b>🛰</b><span>ISS / SATÉLITES<small id="sat-status">Preparando órbita…</small></span><em>ON</em></button>
       <button data-layer="haarp" class="layer active"><b>📡</b><span>HAARP · ALASKA<small>Instalación terrestre</small></span><em>ON</em></button>
       <button data-layer="flights" class="layer"><b>✈</b><span>VUELOS EN VIVO<small id="flight-status">Desactivados · activar para cargar</small></span><em>OFF</em></button>
+      <button data-layer="cameras" class="layer"><b>📷</b><span>CÁMARAS PÚBLICAS<small id="camera-status">Desactivadas · fuentes abiertas</small></span><em>OFF</em></button>
       <button data-layer="ships" class="layer"><b>🚢</b><span>TRÁFICO MARÍTIMO<small>Requiere proveedor AIS</small></span><em>OFF</em></button>
       <div id="flight-tools" class="flight-tools" hidden>
         <div class="flight-tools-head"><strong>TRÁFICO DETECTADO</strong><button id="refresh-flights" type="button">↻ Actualizar</button></div>
@@ -29,8 +31,21 @@
         <section id="aircraft-detail" class="aircraft-detail" hidden><div class="detail-heading">FICHA DE INTELIGENCIA</div><div id="aircraft-detail-content" class="detail-content"></div></section>
         <small class="coverage-note">Cobertura consultada alrededor del centro visible del globo (hasta 250 NM). Mové o acercá el mapa para explorar otras regiones.</small>
       </div>
+      <div id="camera-tools" class="camera-tools" hidden>
+        <div class="camera-tools-head"><strong>CÁMARAS EN ESTA REGIÓN</strong><button id="refresh-cameras" type="button">↻ Actualizar</button></div>
+        <div id="camera-list" class="camera-list"><span class="muted">Activá cámaras para consultar fuentes públicas.</span></div>
+        <small class="coverage-note">Se muestran cámaras publicadas por sus operadores. Según la fuente, pueden ser video en vivo o imágenes periódicas.</small>
+      </div>
       <div class="hint" id="hint">Arrastrá para girar el planeta. Pellizcá para acercar. Activá VUELOS para ver aeronaves ADS-B reales.</div>
     </aside>
+    <section id="camera-viewer" class="camera-viewer" hidden>
+      <div class="camera-viewer-card">
+        <div class="camera-viewer-head"><div><strong id="camera-viewer-title">Cámara pública</strong><small id="camera-viewer-meta"></small></div><button id="close-camera" type="button" aria-label="Cerrar">✕</button></div>
+        <div id="camera-media" class="camera-media"></div>
+        <a id="camera-source-link" class="camera-source-link" target="_blank" rel="noopener noreferrer">Abrir fuente del operador ↗</a>
+        <small class="camera-legal-note">La señal pertenece al operador que la publica. GOD'S EYE solo facilita su ubicación y acceso; no accede a cámaras privadas ni graba las imágenes.</small>
+      </div>
+    </section>
     <footer><span id="coords">MUNDO · 3D</span><span>DATOS PÚBLICOS · USO INFORMATIVO</span></footer>
   </main>
   <script type="module" src="/src/main.js"></script>
