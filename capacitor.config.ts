@@ -5,9 +5,7 @@ const config: CapacitorConfig = {
   appName: "GOD'S EYE",
   webDir: 'dist',
   bundledWebRuntime: false,
-  android: {
-    allowMixedContent: false
-  }
+  android: { allowMixedContent: false }
 };
 
 export default config;
