@@ -92,7 +92,7 @@ const bridge = [
   '  };',
   '}',
   '',
-].join('\\n');
+].join(String.fromCharCode(10));
 if (!main.includes('GODS_EYE_API_ORIGIN')) main = bridge + main;
 await writeFile(mainPath, main);
 
