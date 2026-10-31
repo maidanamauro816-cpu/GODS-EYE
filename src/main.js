@@ -6,6 +6,8 @@ const status = $('sat-status');
 const flightStatus = $('flight-status');
 const flightTools = $('flight-tools');
 const flightList = $('flight-list');
+const aircraftDetail = $('aircraft-detail');
+const aircraftDetailContent = $('aircraft-detail-content');
 
 if (!window.Cesium) {
   hint.textContent = 'No se pudo cargar CesiumJS. Revisá la conexión a internet y reiniciá la app.';
@@ -52,6 +54,8 @@ let lastFlightQuery = 0;
 const aircraft = new Map();
 const FLIGHT_REFRESH_MS = 12000;
 const MAX_TRAIL_POINTS = 45;
+const metadataCache = new Map();
+let selectedAircraftId = null;
 
 async function loadISS() {
   try {
@@ -164,12 +168,86 @@ function renderFlightList() {
   }).join('');
   flightList.querySelectorAll('[data-flight]').forEach(button => button.addEventListener('click', () => selectFlight(button.dataset.flight)));
 }
+function detailRow(label, value) {
+  const shown = value === undefined || value === null || value === '' ? 'No disponible' : String(value);
+  return '<div class="detail-row"><span>' + safeText(label, '') + '</span><b>' + safeText(shown, 'No disponible') + '</b></div>';
+}
+function renderAircraftDetail(item, metadata, route, loading) {
+  const a = item.data;
+  const altitude = typeof a.alt_baro === 'number' ? Math.round(a.alt_baro).toLocaleString('es-AR') + ' ft' : a.alt_baro;
+  const speed = typeof a.gs === 'number' ? Math.round(a.gs) + ' kt' : a.gs;
+  const vertical = typeof a.baro_rate === 'number' ? Math.round(a.baro_rate) + ' ft/min' : a.baro_rate;
+  const heading = typeof a.track === 'number' ? Math.round(a.track) + '°' : a.track;
+  const squawk = a.squawk || a.sqk;
+  const origin = route && route.origin ? (route.origin.name || route.origin.icao || '') + (route.origin.iata ? ' (' + route.origin.iata + ')' : '') : '';
+  const destination = route && route.destination ? (route.destination.name || route.destination.icao || '') + (route.destination.iata ? ' (' + route.destination.iata + ')' : '') : '';
+  const owner = metadata && (metadata.registered_owner || metadata.registeredOwners);
+  const manufacturer = metadata && (metadata.manufacturer || metadata.Manufacturer);
+  const model = metadata && (metadata.type || metadata.Type || a.t);
+  const operator = metadata && (metadata.registered_owner || metadata.registeredOwners || metadata.operator_flag_code || metadata.OperatorFlagCode);
+  aircraftDetailContent.innerHTML =
+    '<div class="detail-flight-title">' + safeText((a.flight || '').trim(), 'SIN INDICATIVO') + '</div>' +
+    '<div class="detail-subtitle">' + safeText(a.r || (metadata && metadata.registration), 'Matrícula no identificada') + ' · ' + safeText(a.hex, '') + '</div>' +
+    '<div class="detail-section">IDENTIDAD Y OPERADOR</div>' +
+    detailRow('Aerolínea / operador', operator) +
+    detailRow('Fabricante', manufacturer) +
+    detailRow('Modelo', model) +
+    detailRow('Código de tipo ICAO', (metadata && metadata.icao_type_code) || a.t) +
+    detailRow('Matrícula', a.r || (metadata && metadata.registration)) +
+    detailRow('Propietario registrado', owner) +
+    detailRow('Año de fabricación', metadata && (metadata.year || metadata.built)) +
+    detailRow('País de registro', metadata && (metadata.country || metadata.country_code)) +
+    '<div class="detail-section">VUELO EN TIEMPO REAL</div>' +
+    detailRow('Altitud barométrica', altitude) +
+    detailRow('Altitud geométrica', typeof a.alt_geom === 'number' ? Math.round(a.alt_geom) + ' ft' : a.alt_geom) +
+    detailRow('Velocidad respecto al suelo', speed) +
+    detailRow('Velocidad indicada', typeof a.ias === 'number' ? Math.round(a.ias) + ' kt' : a.ias) +
+    detailRow('Velocidad verdadera', typeof a.tas === 'number' ? Math.round(a.tas) + ' kt' : a.tas) +
+    detailRow('Velocidad vertical', vertical) +
+    detailRow('Rumbo', heading) +
+    detailRow('Código transpondedor (Squawk)', squawk) +
+    detailRow('Categoría ADS-B', a.category) +
+    detailRow('Estado', a.alt_baro === 'ground' ? 'En tierra' : 'En vuelo') +
+    '<div class="detail-section">RUTA Y POSICIÓN</div>' +
+    detailRow('Origen', origin) +
+    detailRow('Destino', destination) +
+    detailRow('Latitud', Number(a.lat).toFixed(5)) +
+    detailRow('Longitud', Number(a.lon).toFixed(5)) +
+    detailRow('Última señal', a.seen !== undefined ? Math.round(a.seen) + ' s atrás' : (a.now ? new Date(a.now).toLocaleTimeString('es-AR') : 'No disponible')) +
+    detailRow('Calidad de señal', a.rssi !== undefined ? a.rssi + ' dBFS' : '') +
+    (loading ? '<p class="detail-loading">Buscando ficha técnica y ruta en bases públicas…</p>' : '') +
+    '<p class="detail-disclaimer">Datos ADS-B en vivo + base pública de identificación. La ruta comercial puede no estar publicada; la línea celeste del mapa es el recorrido observado por GOD’S EYE, no una predicción.</p>';
+  aircraftDetail.hidden = false;
+}
+async function enrichAircraft(id, item) {
+  if (metadataCache.has(id)) {
+    const cached = metadataCache.get(id);
+    renderAircraftDetail(item, cached.metadata, cached.route, false);
+    return;
+  }
+  renderAircraftDetail(item, null, null, true);
+  const callsign = (item.data.flight || '').trim();
+  try {
+    const query = '/api/aircraft?hex=' + encodeURIComponent(id) + (callsign ? '&callsign=' + encodeURIComponent(callsign) : '');
+    const response = await fetch(query, { cache: 'no-store' });
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    const data = await response.json();
+    metadataCache.set(id, { metadata: data.aircraft || null, route: data.route || null });
+    if (selectedAircraftId === id && aircraft.has(id)) renderAircraftDetail(aircraft.get(id), data.aircraft || null, data.route || null, false);
+  } catch (error) {
+    if (selectedAircraftId === id) renderAircraftDetail(item, null, null, false);
+    console.warn('Aircraft enrichment unavailable', error);
+  }
+}
 function selectFlight(id) {
   const item = aircraft.get(id);
   if (!item) return;
+  selectedAircraftId = id;
   viewer.selectedEntity = item.entity;
   viewer.flyTo(item.entity, { duration: 1.2, offset: new Cesium.HeadingPitchRange(0, Cesium.Math.toRadians(-35), 450000) });
-  hint.textContent = 'Vuelo seleccionado: ' + (item.data.flight || id).trim() + '. La línea celeste representa posiciones registradas durante el seguimiento.';
+  renderAircraftDetail(item, null, null, true);
+  enrichAircraft(id, item);
+  hint.textContent = 'Ficha ampliada de ' + (item.data.flight || id).trim() + '. Se están consultando datos técnicos y ruta pública.';
 }
 async function loadFlights(force) {
   if (!flightsEnabled || flightBusy) return;
