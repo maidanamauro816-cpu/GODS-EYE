@@ -370,12 +370,11 @@ export function initMobileShell({
   // top is intentional. Pointer capture/touch-action:none would also seize
   // ordinary vertical scrolling inside the borrowed panels.
   const sheetRoot = (target, sheet) => {
-    const roots =
-      ['layers', 'flights', 'satellites'].includes(sheet)
-        ? [element('left-panel-stack')]
-        : sheet === 'more'
-          ? [element('right-context-rail'), dock]
-          : [element('right-context-rail')];
+    const roots = ['layers', 'flights', 'satellites'].includes(sheet)
+      ? [element('left-panel-stack')]
+      : sheet === 'more'
+        ? [element('right-context-rail'), dock]
+        : [element('right-context-rail')];
     return roots.find((root) => root?.contains(target));
   };
   const scrolled = (target, root) => {
