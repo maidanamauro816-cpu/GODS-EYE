@@ -94,14 +94,20 @@ export default {
     server.addEventListener("message",event=>{
       if(subscribed){server.send(JSON.stringify({type:"error",message:"La suscripción ya está activa"}));return;}
       let payload;try{payload=JSON.parse(event.data)}catch{closeBoth(1008,"invalid JSON");return;}
-      const b=payload.bbox;
-      if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite)){closeBoth(1008,"invalid bbox");return;}
-      const [west,south,east,north]=b;
-      if(west < -180||east>180||south < -85||north>85||west>=east||south>=north||(east-west)*(north-south)>600){closeBoth(1008,"bbox outside allowed limits");return;}
+      let boxes;
+      if(payload.global===true){
+        boxes=[[[90,-180],[-90,180]]];
+      }else{
+        const b=payload.bbox;
+        if(!Array.isArray(b)||b.length!==4||!b.every(Number.isFinite)){closeBoth(1008,"invalid bbox");return;}
+        const [west,south,east,north]=b;
+        if(west < -180||east>180||south < -85||north>85||west>=east||south>=north||(east-west)*(north-south)>600){closeBoth(1008,"bbox outside allowed limits");return;}
+        boxes=[[[north,west],[south,east]]];
+      }
       subscribed=true;
       upstream=new WebSocket("wss://stream.aisstream.io/v0/stream");
       upstream.addEventListener("open",()=>{
-        upstream.send(JSON.stringify({APIKey:env.AISSTREAM_API_KEY,BoundingBoxes:[[[north,west],[south,east]]],FilterMessageTypes:["PositionReport","ShipStaticData","StaticDataReport"]}));
+        upstream.send(JSON.stringify({APIKey:env.AISSTREAM_API_KEY,BoundingBoxes:boxes,FilterMessageTypes:["PositionReport","StandardClassBPositionReport","ExtendedClassBPositionReport","ShipStaticData","StaticDataReport"]}));
       });
       upstream.addEventListener("message",msg=>{if(closed)return;try{server.send(msg.data)}catch{closeBoth(1011,"relay failed");}});
       upstream.addEventListener("error",()=>{try{server.send(JSON.stringify({type:"error",message:"Proveedor AIS no disponible"}))}catch{}closeBoth(1011,"upstream error");});
