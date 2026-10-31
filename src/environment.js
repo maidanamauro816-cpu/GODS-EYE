@@ -8,7 +8,8 @@ export function initEnvironmentLayer(globe, onStatus=()=>{}, onHint=()=>{}) {
   viewer=globe; list=$('environment-list'); status=$('environment-status'); tools=$('environment-tools'); toggle=$('[data-layer="environment"]');
   async function notify(event) {
     if (seen.has(event.id)) return;
-    seen.add(event.id);\n    try { localStorage.setItem('godseye-env-seen', JSON.stringify([...seen].slice(-500))); } catch {}
+    seen.add(event.id);
+    try { localStorage.setItem('godseye-env-seen', JSON.stringify([...seen].slice(-500))); } catch {}
     try {
       if (window.Capacitor?.isNativePlatform?.()) {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
