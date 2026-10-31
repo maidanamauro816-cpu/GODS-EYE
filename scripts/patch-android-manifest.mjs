@@ -28,12 +28,15 @@ for (const feature of features) {
   }
 }
 if (additions.length) {
-  const manifestTagEnd = xml.indexOf('>');
-  if (manifestTagEnd < 0 || !xml.slice(0, manifestTagEnd).includes('<manifest')) {
+  // AndroidManifest.xml starts with an XML declaration, so locate the
+  // manifest element itself rather than treating the first '>' as its end.
+  const manifestTag = /<manifest\\b[^>]*>/s.exec(xml);
+  if (!manifestTag) {
     throw new Error('AndroidManifest.xml has no valid manifest root element');
   }
+  const insertAt = manifestTag.index + manifestTag[0].length;
   const newline = String.fromCharCode(10);
-  xml = xml.slice(0, manifestTagEnd + 1) + newline + additions.join(newline) + xml.slice(manifestTagEnd + 1);
+  xml = xml.slice(0, insertAt) + newline + additions.join(newline) + xml.slice(insertAt);
   await writeFile(manifestPath, xml);
 }
 console.log(`Android manifest permissions verified; added ${additions.length} declarations.`);
