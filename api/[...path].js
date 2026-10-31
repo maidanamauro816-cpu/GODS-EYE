@@ -5,6 +5,8 @@ let serverPromise;
 
 async function getMiddlewareServer() {
   if (!serverPromise) {
+    const hosts = [process.env.VERCEL_URL, process.env.VERCEL_PROJECT_PRODUCTION_URL, 'gods-eye-neon.vercel.app'].filter(Boolean);
+    process.env.GEV_ALLOWED_HOSTS = [...new Set(hosts)].join(',');
     serverPromise = createServer({
       configFile: path.resolve(process.cwd(), 'server/standalone/vite.config.js'),
       appType: 'custom',
@@ -42,6 +44,7 @@ export default async function handler(req, res) {
     // request. Origin/Host checks remain active in the provider middleware.
     if (process.env.VERCEL === '1') {
       req.headers = { ...req.headers };
+      try { req.socket.encrypted = true; } catch { /* runtime socket may be immutable */ }
       for (const name of [
         'forwarded', 'via', 'x-forwarded-for', 'x-forwarded-host',
         'x-forwarded-port', 'x-forwarded-proto', 'x-real-ip',
