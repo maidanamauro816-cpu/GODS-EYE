@@ -1,4 +1,7 @@
 import { Capacitor } from '@capacitor/core';
+import { createStandaloneApplication } from './standalone/application.js';
+import { describeError } from './standalone/errors.js';
+import { t } from './i18n/index.js';
 
 // The browser uses same-origin Vercel routes. The Android build sends only
 // same-origin /api requests to the public production API host.
@@ -22,10 +25,6 @@ if (Capacitor.isNativePlatform()) {
     return godsEyeFetch(input, init);
   };
 }
-
-import { createStandaloneApplication } from './standalone/application.js';
-import { describeError } from './standalone/errors.js';
-import { t } from './i18n/index.js';
 
 const application = createStandaloneApplication({
   googleApiKey: import.meta.env.GOOGLE_MAPS_API_KEY,
