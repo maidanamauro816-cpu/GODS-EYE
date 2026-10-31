@@ -2,7 +2,7 @@ name: Build Android APK
 
 on:
   push:
-    branches: [main, feature/live-world-layers]
+    branches: [main, feature/live-world-layers, fix/restore-map-layer-interaction]
   workflow_dispatch:
 
 permissions:

@@ -55,7 +55,15 @@ export class CameraLayer {
     }catch(error){if(error.name!=="AbortError")this.onStatus({loading:false,count:this.entities.size,sources:this.sources,error:error.message});}
   }
   async openCamera(camera){
-    if(camera.kind==="cluster"){this.onStatus({loading:false,count:this.entities.size,message:"Acercá el globo para ver cámaras individuales"});return;}
+    if(camera.kind==="cluster"){
+      this.onStatus({loading:false,count:this.entities.size,message:"Acercando para desplegar las cámaras individuales…"});
+      this.viewer.camera.flyTo({
+        destination:Cesium.Cartesian3.fromDegrees(camera.lon,camera.lat,180000),
+        duration:1.5,
+        complete:()=>{if(this.visible)this.refresh();}
+      });
+      return;
+    }
     const modal=document.getElementById("camera-viewer");
     if(!modal)return;
     this.stopVideo();

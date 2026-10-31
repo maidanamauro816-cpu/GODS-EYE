@@ -17,3 +17,27 @@
 @media(max-width:480px){.panel{max-height:calc(100vh - 140px)}}
 
 .disaster-status{margin:0 4px 8px;padding:7px 8px;border:1px solid #3a3440;border-radius:7px;background:#17121b;color:#ffb36a;font-size:9px;letter-spacing:.7px;font-weight:700}.alert-pulse{color:#ffbf78!important;text-shadow:0 0 10px #ff6a35}
+
+
+/* Mobile layer dock: keep the map full-screen and put the layer selectors at the bottom. */
+@media(max-width:480px){
+  .panel{
+    z-index:6;left:0;right:0;bottom:0;top:auto;width:100%;
+    max-height:112px;height:auto;padding:7px 8px calc(7px + env(safe-area-inset-bottom));
+    display:flex;align-items:stretch;gap:4px;overflow-x:auto;overflow-y:hidden;
+    border-left:0;border-right:0;border-bottom:0;border-radius:13px 13px 0 0;
+    white-space:normal;
+  }
+  .panel-title,.disaster-status,.hint{display:none}
+  .layer{
+    flex:0 0 84px;min-width:84px;min-height:82px;
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    gap:3px;padding:5px 3px;border:1px solid #1b3045;border-radius:9px;
+    text-align:center;background:rgba(8,22,39,.9);
+  }
+  .layer b{width:auto;font-size:18px;line-height:20px}
+  .layer span{flex:none;font-size:9px;line-height:1.15}
+  .layer small{font-size:7px;line-height:1.1;margin-top:2px;max-width:78px}
+  .layer em{font-size:8px}
+  footer{bottom:112px}
+}
