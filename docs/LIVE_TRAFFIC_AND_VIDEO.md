@@ -15,7 +15,7 @@ AIS Stream ofrece posiciones AIS por WebSocket. La clave NO se incluye en la APK
 3. Configurar el secreto AISSTREAM_API_KEY en el Worker.
 4. Configurar ALLOWED_ORIGINS con los orígenes de la app, por ejemplo https://localhost,capacitor://localhost,http://localhost:5173.
 5. En GitHub → Settings → Secrets and variables → Actions, crear VITE_TRAFFIC_PROXY_URL con la dirección HTTPS del Worker terminada en /flights y VITE_AIS_PROXY_URL con la dirección WSS terminada en /ais.
-6. En Actions, ejecutar Deploy GOD'S EYE AIS proxy y luego Build Android APK. El despliegue necesita los secrets CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID y AISSTREAM_API_KEY; opcionalmente AIS_ALLOWED_ORIGINS.
+6. En Actions, ejecutar Deploy GOD'S EYE AIS proxy y luego Build Android APK. El despliegue necesita los secrets CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID y AISSTREAM_API_KEY; opcionalmente AIS_ALLOWED_ORIGINS, FIRMS_MAP_KEY, OPENSKY_CLIENT_ID y OPENSKY_CLIENT_SECRET. Las credenciales OpenSky aceleran la actualización mundial de vuelos; sin ellas se usa la cuota anónima con caché de 15 minutos.
 7. Ejecutar nuevamente el workflow Android.
 
 La app solicita una suscripción AIS mundial al Worker. El cliente mantiene los últimos mensajes recibidos, elimina posiciones sin actualización durante 30 minutos y dibuja los 1.800 buques más cercanos al centro del globo para cuidar el rendimiento Android. AIS es información transmitida por los buques y estaciones costeras/satelitales; no todos los barcos transmiten ni hay garantía de cobertura oceánica continua. AIS Stream limita a tres conexiones por cuenta y por IP; no abrir conexiones duplicadas innecesarias. La disponibilidad y los límites del servicio AIS Stream aplican.
