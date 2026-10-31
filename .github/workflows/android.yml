@@ -49,6 +49,22 @@ jobs:
         run: |
           node --input-type=module -e "import { createServer } from 'vite'; import { localProviderPlugins } from './server/providers/local.js'; import { standaloneVoiceTools } from './server/standalone/voiceTools.js'; const tools = standaloneVoiceTools(); const s = await createServer({ configFile: false, root: process.cwd(), appType: 'custom', plugins: localProviderPlugins({ realtime: { tools }, gemini: { tools } }), server: { middlewareMode: true, hmr: false, watch: null }, optimizeDeps: { noDiscovery: true, include: [] } }); console.log('Provider middleware stack:', s.middlewares.stack.length); if (s.middlewares.stack.length < 20) process.exit(1); await s.close();"
 
+      - name: Smoke test deployed Vercel aircraft provider
+        run: |
+          PREVIEW_URL="https://gods-eye-git-feature-gods-eye-view-i-24bbf9-maidanamauro816-cpu.vercel.app"
+          for attempt in $(seq 1 24); do
+            CODE=$(curl --silent --show-error --max-time 20 -o /tmp/gev-aircraft.json -w '%{http_code}' "$PREVIEW_URL/api/military" || true)
+            if [ "$CODE" = "200" ] && node -e "const d=require('/tmp/gev-aircraft.json'); if (!Array.isArray(d.ac)) process.exit(1)"; then
+              echo "Vercel preview provider returned aircraft JSON."
+              exit 0
+            fi
+            echo "Preview provider not ready yet (HTTP $CODE), retry $attempt/24."
+            sleep 10
+          done
+          echo "Vercel preview aircraft provider did not return valid data."
+          cat /tmp/gev-aircraft.json || true
+          exit 1
+
       - name: Generate Android project
         run: npx cap add android
 
