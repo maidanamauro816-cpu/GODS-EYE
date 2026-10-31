@@ -8,7 +8,7 @@ export function initEnvironmentLayer(globe, onStatus=()=>{}, onHint=()=>{}) {
   viewer=globe; list=$('environment-list'); status=$('environment-status'); tools=$('environment-tools'); toggle=$('[data-layer="environment"]');
   async function notify(event) {
     if (seen.has(event.id)) return;
-    seen.add(event.id);
+    seen.add(event.id);\n    try { localStorage.setItem('godseye-env-seen', JSON.stringify([...seen].slice(-500))); } catch {}
     try {
       if (window.Capacitor?.isNativePlatform?.()) {
         const { LocalNotifications } = await import('@capacitor/local-notifications');
@@ -45,7 +45,7 @@ export function initEnvironmentLayer(globe, onStatus=()=>{}, onHint=()=>{}) {
       render(events.sort((a,b)=>(b.time||0)-(a.time||0)));
       status.textContent=earthquakes.length+' sismos · '+alerts.length+' alertas/eventos';
       onStatus(status.textContent);
-      for(const e of events){if(e.kind!=='earthquake'&&(/red|extreme|severe/i.test(e.level||'')))await notify(e);}
+      for(const e of events){if((e.kind==='earthquake'&&Number(e.magnitude)>=4)||(e.kind!=='earthquake'&&(/red|extreme|severe/i.test(e.level||''))))await notify(e);}
       lastLoad=Date.now();if(data.errors?.length)console.warn('Fuentes ambientales:',data.errors);
       onHint('Datos ambientales recibidos de USGS, GDACS y NOAA/NWS. La cobertura de alertas meteorológicas de NWS corresponde a Estados Unidos y territorios.');
     } catch(e){status.textContent='Error al consultar fuentes';list.innerHTML='<span class="muted">'+safe(e.message)+'</span>';}
