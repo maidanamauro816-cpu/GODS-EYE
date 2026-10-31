@@ -1,6 +1,8 @@
 import { twoline2satrec, propagate, gstime, eciToGeodetic, degreesLat, degreesLong } from 'satellite.js';
 import { CameraLayer } from './layers/CameraLayer.js';
 import { SatelliteLayer } from './layers/SatelliteLayer.js';
+import { FlightLayer } from './layers/FlightLayer.js';
+import { ShipLayer } from './layers/ShipLayer.js';
 
 const $ = (id) => document.getElementById(id);
 const hint = $('hint');
@@ -41,6 +43,16 @@ const haarp = viewer.entities.add({
   description: 'Instalación terrestre de investigación de la ionosfera en Gakona, Alaska. No es un satélite.'
 });
 
+let flightsVisible = false;
+let shipsVisible = false;
+const flightLayer = new FlightLayer(viewer, state => {
+  const el = $('flights-status');
+  if (el) el.textContent = state.loading ? 'Consultando ADS-B…' : state.error ? state.error : state.count + ' aeronaves · ' + (state.coverage || 'ADS-B');
+});
+const shipLayer = new ShipLayer(viewer, state => {
+  const el = $('ships-status');
+  if (el) el.textContent = state.loading ? 'Conectando AIS…' : state.error ? state.error : state.count + ' buques · ' + (state.coverage || 'AIS');
+});
 let issEntity = null;
 let starlinkVisible = false;
 const starlinkLayer = new SatelliteLayer(viewer, (state) => {
@@ -132,12 +144,16 @@ document.querySelectorAll('[data-layer]').forEach(button => {
       hint.textContent = camerasVisible
         ? 'Cámaras públicas: tocá un marcador para ver la imagen disponible y abrir la fuente oficial.'
         : 'Capa de cámaras públicas oculta.';
-    } else {
-      hint.textContent = layer === 'flights'
-        ? 'Vuelos: pendiente de conectar ADS-B.LOL con un proxy de consulta responsable.'
-        : 'Tráfico marítimo: pendiente de proveedor AIS autorizado. No se muestran posiciones inventadas.';
+    } else if (layer === 'flights') {
+      flightsVisible = !flightsVisible;
+      flightLayer.setVisible(flightsVisible);
+      hint.textContent = flightsVisible ? 'Vuelos ADS-B en vivo. La consulta cubre hasta 250 millas náuticas alrededor del centro del mapa; acercá y mové el globo para explorar otras regiones.' : 'Capa de vuelos oculta.';
+    } else if (layer === 'ships') {
+      shipsVisible = !shipsVisible;
+      shipLayer.setVisible(shipsVisible);
+      hint.textContent = shipsVisible ? 'Buques AIS en directo para la región visible. Requiere el proxy seguro de GOD’S EYE configurado en Cloudflare.' : 'Capa de tráfico marítimo oculta.';
     }
-    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : false;
+    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : layer === 'flights' ? flightsVisible : layer === 'ships' ? shipsVisible : false;
     button.classList.toggle('active', active);
     button.querySelector('em').textContent = active ? 'ON' : 'OFF';
   });
@@ -147,10 +163,16 @@ loadISS().then(updateISS);
 setInterval(updateISS, 2500);
 setInterval(loadISS, 30 * 60 * 1000);
 setInterval(() => { if (camerasVisible) cameraLayer.refresh(); }, 60 * 1000);
+let flightRefreshTimer = null;
+viewer.camera.changed.addEventListener(() => {
+  if (!flightsVisible) return;
+  if (flightRefreshTimer) clearTimeout(flightRefreshTimer);
+  flightRefreshTimer = setTimeout(() => flightLayer.refresh(), 1800);
+});
 let cameraRefreshTimer = null;
 viewer.camera.changed.addEventListener(() => {
   if (!camerasVisible) return;
   if (cameraRefreshTimer) clearTimeout(cameraRefreshTimer);
   cameraRefreshTimer = setTimeout(() => cameraLayer.refresh(), 1500);
 });
-window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); });
+window.addEventListener('beforeunload', () => { cameraLayer.destroy(); starlinkLayer.destroy(); flightLayer.destroy(); shipLayer.destroy(); });
