@@ -1,4 +1,5 @@
-import { initCameraLayer } from './cameras.js';\nimport { initEnvironmentLayer } from './environment.js';
+import { initCameraLayer } from './cameras.js';
+import { initEnvironmentLayer } from './environment.js';
 import { twoline2satrec, propagate, gstime, eciToGeodetic, degreesLat, degreesLong } from 'satellite.js';
 
 const $ = (id) => document.getElementById(id);
@@ -37,7 +38,8 @@ viewer.camera.setView({
   orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 }
 });
 
-const environmentLayer = initEnvironmentLayer(viewer, message => { $('environment-status').textContent = message; }, message => { hint.textContent = message; });\nconst cameraLayer = initCameraLayer(viewer, message => { $('camera-status').textContent = message; }, message => { hint.textContent = message; });
+const environmentLayer = initEnvironmentLayer(viewer, message => { $('environment-status').textContent = message; }, message => { hint.textContent = message; });
+const cameraLayer = initCameraLayer(viewer, message => { $('camera-status').textContent = message; }, message => { hint.textContent = message; });
 
 const haarp = viewer.entities.add({
   name: 'HAARP · Gakona, Alaska',
@@ -320,7 +322,11 @@ document.querySelectorAll('[data-layer]').forEach(button => {
     } else if (layer === 'flights') {
       setFlightsEnabled(!flightsEnabled);
       active = flightsEnabled;
-    } else if (layer === 'environment') {\n      const turnOn = !button.classList.contains('active');\n      environmentLayer.setEnabled(turnOn);\n      active = turnOn;\n    } else if (layer === 'cameras') {
+    } else if (layer === 'environment') {
+      const turnOn = !button.classList.contains('active');
+      environmentLayer.setEnabled(turnOn);
+      active = turnOn;
+    } else if (layer === 'cameras') {
       const turnOn = !button.classList.contains('active');
       cameraLayer.setEnabled(turnOn);
       active = turnOn;
