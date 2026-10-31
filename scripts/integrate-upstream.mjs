@@ -1,4 +1,4 @@
-import { cp, copyFile, readFile, writeFile, mkdir } from 'node:fs/promises';
+import { cp, copyFile, readFile, writeFile, mkdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -13,6 +13,12 @@ for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
 }
 for (const dir of ['src', 'server', 'build', 'config', 'public', 'docs', 'tools', 'changelog.d', 'pinokio', '.agents']) {
   await cp(path.join(upstream, dir), path.join(root, dir), { recursive: true, force: true });
+}
+// The upstream app already owns the CCTV and environmental layers. Remove
+// the previous standalone prototypes so their unused strings and Cesium labels
+// do not leak into the new app or its translation/build checks.
+for (const legacyFile of ['src/cameras.js', 'src/environment.js']) {
+  await rm(path.join(root, legacyFile), { force: true });
 }
 await cp(path.join(upstream, 'scripts'), path.join(root, 'scripts'), { recursive: true, force: true });
 for (const name of ['prepare-icon.mjs', 'integrate-upstream.mjs']) {
