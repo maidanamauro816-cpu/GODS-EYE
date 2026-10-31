@@ -1,5 +1,8 @@
-const ADSB_PROXY=import.meta.env.VITE_ADSB_PROXY || "/api/adsb";
-const WORLD_PROXY=import.meta.env.VITE_TRAFFIC_PROXY_URL;
+const TRAFFIC_PROXY=import.meta.env.VITE_TRAFFIC_PROXY_URL;
+// In Android/Capacitor, /api/adsb points to the local app bundle, not Vercel.
+// Reuse the configured Cloudflare traffic worker for regional ADS-B requests.
+const ADSB_PROXY=import.meta.env.VITE_ADSB_PROXY || (TRAFFIC_PROXY ? new URL("/flights", TRAFFIC_PROXY).toString() : "/api/adsb");
+const WORLD_PROXY=TRAFFIC_PROXY;
 const endpoint=value=>new URL(value,window.location.origin);
 const valid=p=>p&&Number.isFinite(+p.lat)&&Number.isFinite(+p.lon)&&Math.abs(+p.lat)<=90&&Math.abs(+p.lon)<=180;
 
