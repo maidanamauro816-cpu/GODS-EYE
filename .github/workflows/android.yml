@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -37,8 +37,10 @@ jobs:
         env:
           PUPPETEER_SKIP_DOWNLOAD: '1'
 
-      - name: Prepare app icon
-        run: node scripts/prepare-icon.mjs
+      - name: Prepare app and web icons
+        run: |
+          node scripts/prepare-icon.mjs
+          node scripts/generate-icons.mjs
 
       - name: Run upstream setup policy checks
         run: npm run doctor -- --json
