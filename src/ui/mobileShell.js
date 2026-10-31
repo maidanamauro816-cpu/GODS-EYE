@@ -31,6 +31,8 @@ export const MOBILE_SHEET_PANELS = Object.freeze({
     'location-bar',
     'control-panel',
     'global-context-panel',
+    'weather-panel',
+    'recent-imagery-panel',
     'pp-toggles',
   ]),
 });
