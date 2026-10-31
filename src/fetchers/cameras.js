@@ -36,7 +36,7 @@ export async function loadPublicCameras({signal,bbox,zoom=4}={}) {
     url.searchParams.set("bbox",box.join(","));
     url.searchParams.set("zoom",String(zoom));
     url.searchParams.set("cluster","auto");
-    url.searchParams.set("limit","500");
+    url.searchParams.set("limit","250");
     const response=await fetch(url,{signal,headers:{Accept:"application/json"},cache:"no-store"});
     if(!response.ok) throw new Error("HTTP "+response.status);
     const data=await response.json();
