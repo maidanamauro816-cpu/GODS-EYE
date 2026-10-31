@@ -31,8 +31,11 @@ jobs:
           java-version: '17'
       - name: Install dependencies
         run: npm install
-      - name: Validate Cloudflare proxy syntax
-        run: node --check workers/ais-proxy/src/index.js
+      - name: Validate JavaScript modules
+        run: |
+          node --check workers/ais-proxy/src/index.js
+          node --check src/services/DisasterWatcher.js
+          node --check public/runners/disaster-runner.js
       - name: Build web assets
         env:
           VITE_AIS_PROXY_URL: ${{ secrets.VITE_AIS_PROXY_URL }}
@@ -41,6 +44,20 @@ jobs:
         run: npm run build
       - name: Generate Android project
         run: npx cap add android
+      - name: Configure Background Runner Android engine
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('android/app/build.gradle')
+          content = path.read_text()
+          marker = "dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'"
+          addition = marker + ", '../../node_modules/@capacitor/background-runner/android/src/main/libs'"
+          if 'background-runner/android/src/main/libs' not in content:
+              if marker not in content:
+                  raise SystemExit('Could not find Android flatDir repository block')
+              content = content.replace(marker, addition)
+              path.write_text(content)
+          PY
       - name: Sync Capacitor
         run: npx cap sync android
       - name: Build APK
