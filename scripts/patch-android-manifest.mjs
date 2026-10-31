@@ -7,14 +7,12 @@ const permissions = [
   'android.permission.ACCESS_NETWORK_STATE',
   'android.permission.RECORD_AUDIO',
   'android.permission.MODIFY_AUDIO_SETTINGS',
-  'android.permission.CAMERA',
   'android.permission.ACCESS_COARSE_LOCATION',
   'android.permission.ACCESS_FINE_LOCATION',
   'android.permission.POST_NOTIFICATIONS',
 ];
 const features = [
   'android.hardware.microphone',
-  'android.hardware.camera',
   'android.hardware.location.gps',
 ];
 const additions = [];
@@ -30,7 +28,11 @@ for (const feature of features) {
   }
 }
 if (additions.length) {
-  xml = xml.replace(/(<manifest\\b[^>]*>)/, `$1\\n${additions.join('\\n')}\\n`);
+  const manifestTagEnd = xml.indexOf('>');
+  if (manifestTagEnd < 0 || !xml.slice(0, manifestTagEnd).includes('<manifest')) {
+    throw new Error('AndroidManifest.xml has no valid manifest root element');
+  }
+  xml = xml.slice(0, manifestTagEnd + 1) + '\\n' + additions.join('\\n') + xml.slice(manifestTagEnd + 1);
   await writeFile(manifestPath, xml);
 }
 console.log(`Android manifest permissions verified; added ${additions.length} declarations.`);
