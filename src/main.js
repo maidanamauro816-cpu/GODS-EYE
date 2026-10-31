@@ -51,6 +51,11 @@ viewer.scene.globe.showGroundAtmosphere = true;
 viewer.scene.skyAtmosphere.show = true;
 viewer.scene.screenSpaceCameraController.minimumZoomDistance = 900;
 viewer.scene.screenSpaceCameraController.maximumZoomDistance = 45000000;
+viewer.scene.screenSpaceCameraController.zoomFactor = 3.0;
+viewer.scene.screenSpaceCameraController.inertiaZoom = 0.82;
+viewer.scene.screenSpaceCameraController.inertiaSpin = 0.88;
+viewer.scene.screenSpaceCameraController.inertiaTranslate = 0.88;
+viewer.scene.screenSpaceCameraController.enableCollisionDetection = true;
 viewer.camera.setView({
   destination: Cesium.Cartesian3.fromDegrees(-35, 18, 24500000),
   orientation: { heading: 0, pitch: Cesium.Math.toRadians(-90), roll: 0 }
@@ -61,7 +66,8 @@ const haarp = viewer.entities.add({
   position: Cesium.Cartesian3.fromDegrees(-145.15, 62.39, 0),
   point: { pixelSize: 11, color: Cesium.Color.ORANGE, outlineColor: Cesium.Color.WHITE, outlineWidth: 2 },
   label: { text: 'HAARP · ALASKA', font: '12px sans-serif', fillColor: Cesium.Color.WHITE, outlineColor: Cesium.Color.BLACK, outlineWidth: 3, style: Cesium.LabelStyle.FILL_AND_OUTLINE, pixelOffset: new Cesium.Cartesian2(0, -20), scaleByDistance: new Cesium.NearFarScalar(1e5, 1, 1e7, .45) },
-  description: 'Instalación terrestre de investigación de la ionosfera en Gakona, Alaska. No es un satélite.'
+  description: 'Instalación terrestre de investigación de la ionosfera en Gakona, Alaska. No es un satélite.',
+  show: false
 });
 
 let flightsVisible = false;
@@ -95,8 +101,8 @@ const starlinkLayer = new SatelliteLayer(viewer, (state) => {
   const el = $('starlink-status');
   if (el) el.textContent = state.loading ? 'Descargando TLE de CelesTrak…' : state.error ? state.error : state.count + ' objetos orbitales · CelesTrak';
 });
-let issVisible = true;
-let haarpVisible = true;
+let issVisible = false;
+let haarpVisible = false;
 let lastTle = null;
 let camerasVisible = false;
 const cameraLayer = new CameraLayer(viewer, (state) => {
@@ -171,49 +177,72 @@ viewer.screenSpaceEventHandler.setInputAction((event) => {
   $('coords').textContent = Cesium.Math.toDegrees(c.latitude).toFixed(2) + '°, ' + Cesium.Math.toDegrees(c.longitude).toFixed(2) + '°';
 }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
-document.querySelectorAll('[data-layer]').forEach(button => {
+const layerButtons = [...document.querySelectorAll('[data-layer]')];
+
+function updateLayerButtonStates(selected) {
+  for (const button of layerButtons) {
+    const active = button.dataset.layer === selected;
+    button.classList.toggle('active', active);
+    const indicator = button.querySelector('em');
+    if (indicator) indicator.textContent = active ? 'ON' : 'OFF';
+  }
+}
+
+async function hideAllLayers() {
+  flightsVisible = false; flightLayer.setVisible(false);
+  shipsVisible = false; shipLayer.setVisible(false);
+  camerasVisible = false; cameraLayer.setVisible(false);
+  weatherVisible = false; weatherLayer.setVisible(false);
+  earthquakesVisible = false; earthquakeLayer.setVisible(false);
+  firesVisible = false; fireLayer.setVisible(false);
+  issVisible = false; if (issEntity) issEntity.show = false;
+  starlinkVisible = false; await starlinkLayer.setVisible(false);
+  haarpVisible = false; haarp.show = false;
+}
+
+layerButtons.forEach(button => {
   button.addEventListener('click', async () => {
     const layer = button.dataset.layer;
-    if (layer === 'iss') {
-      issVisible = !issVisible;
-      if (issEntity) issEntity.show = issVisible;
-    } else if (layer === 'starlink') {
-      starlinkVisible = !starlinkVisible;
-      await starlinkLayer.setVisible(starlinkVisible);
-    } else if (layer === 'haarp') {
-      haarpVisible = !haarpVisible;
-      haarp.show = haarpVisible;
-    } else if (layer === 'cameras') {
-      camerasVisible = !camerasVisible;
-      cameraLayer.setVisible(camerasVisible);
-      if (camerasVisible && cameraLayer.entities.size === 0) await cameraLayer.refresh();
-      hint.textContent = camerasVisible
-        ? 'Cámaras públicas: tocá un marcador para ver la imagen disponible y abrir la fuente oficial.'
-        : 'Capa de cámaras públicas oculta.';
-    } else if (layer === 'flights') {
-      flightsVisible = !flightsVisible;
-      flightLayer.setVisible(flightsVisible);
-      hint.textContent = flightsVisible ? 'Vuelos ADS-B en vivo. La consulta cubre hasta 250 millas náuticas alrededor del centro del mapa; acercá y mové el globo para explorar otras regiones.' : 'Capa de vuelos oculta.';
-    } else if (layer === 'ships') {
-      shipsVisible = !shipsVisible;
-      shipLayer.setVisible(shipsVisible);
-      hint.textContent = shipsVisible ? 'Buques AIS mundiales en directo. Se priorizan en pantalla los 1.800 más cercanos al centro del globo. Requiere el proxy seguro de GODS EYE configurado en Cloudflare.' : 'Capa de tráfico marítimo oculta.';
-    } else if (layer === 'earthquakes') {
-      earthquakesVisible = !earthquakesVisible;
-      earthquakeLayer.setVisible(earthquakesVisible);
-      hint.textContent = earthquakesVisible ? 'Sismos mundiales registrados por USGS durante las últimas 24 horas.' : 'Capa de terremotos oculta.';
-    } else if (layer === 'weather') {
-      weatherVisible = !weatherVisible;
-      weatherLayer.setVisible(weatherVisible);
-      hint.textContent = weatherVisible ? 'Clima actual en el punto central del globo. Mové el mapa para consultar otra ubicación.' : 'Capa meteorológica oculta.';
-    } else if (layer === 'fires') {
-      firesVisible = !firesVisible;
-      fireLayer.setVisible(firesVisible);
-      hint.textContent = firesVisible ? 'Detecciones térmicas VIIRS de NASA FIRMS. Son puntos satelitales de calor, no confirmaciones automáticas de incendio.' : 'Capa de incendios oculta.';
+    const alreadyActive = button.classList.contains('active');
+    await hideAllLayers();
+    if (alreadyActive) {
+      updateLayerButtonStates(null);
+      hint.textContent = 'Todas las capas están ocultas. Elegí una categoría para explorar el globo.';
+      return;
     }
-    const active = layer === 'iss' ? issVisible : layer === 'starlink' ? starlinkVisible : layer === 'haarp' ? haarpVisible : layer === 'cameras' ? camerasVisible : layer === 'flights' ? flightsVisible : layer === 'ships' ? shipsVisible : layer === 'earthquakes' ? earthquakesVisible : layer === 'weather' ? weatherVisible : layer === 'fires' ? firesVisible : false;
-    button.classList.toggle('active', active);
-    button.querySelector('em').textContent = active ? 'ON' : 'OFF';
+
+    if (layer === 'satellites') {
+      issVisible = true;
+      if (!lastTle) await loadISS();
+      updateISS();
+      if (issEntity) issEntity.show = true;
+      starlinkVisible = true;
+      await starlinkLayer.setVisible(true);
+      hint.textContent = 'Satélites: ISS y objetos de la constelación Starlink calculados con elementos orbitales públicos. La cobertura depende del catálogo disponible.';
+    } else if (layer === 'haarp') {
+      haarpVisible = true; haarp.show = true;
+      hint.textContent = 'Ubicación de HAARP en Alaska. Es una instalación terrestre, no un satélite.';
+    } else if (layer === 'cameras') {
+      camerasVisible = true; cameraLayer.setVisible(true);
+      if (cameraLayer.entities.size === 0) await cameraLayer.refresh();
+      hint.textContent = 'Cámaras públicas: acercá el globo y tocá un marcador para consultar la imagen o abrir la fuente oficial cuando esté disponible.';
+    } else if (layer === 'flights') {
+      flightsVisible = true; flightLayer.setVisible(true);
+      hint.textContent = 'Vuelos ADS-B en vivo. La cobertura y los datos dependen de los receptores disponibles; mové o acercá el globo para consultar otra región.';
+    } else if (layer === 'ships') {
+      shipsVisible = true; shipLayer.setVisible(true);
+      hint.textContent = 'Buques AIS. Se muestran los datos recibidos por el proxy seguro configurado para GODS EYE.';
+    } else if (layer === 'earthquakes') {
+      earthquakesVisible = true; earthquakeLayer.setVisible(true);
+      hint.textContent = 'Sismos mundiales registrados por USGS durante las últimas 24 horas.';
+    } else if (layer === 'weather') {
+      weatherVisible = true; weatherLayer.setVisible(true);
+      hint.textContent = 'Meteorología en el punto central del globo. Mové el mapa para consultar otra ubicación.';
+    } else if (layer === 'fires') {
+      firesVisible = true; fireLayer.setVisible(true);
+      hint.textContent = 'Detecciones térmicas VIIRS de NASA FIRMS. Son observaciones satelitales de calor, no confirmaciones automáticas de incendio.';
+    }
+    updateLayerButtonStates(layer);
   });
 });
 
